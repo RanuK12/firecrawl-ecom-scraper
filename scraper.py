@@ -1,8 +1,17 @@
-=import csv
+import csv
 from firecrawl import FirecrawlApp
 import argparse
 
-def scrape_ecommerce(url, api_key):
+def extract_product_fields(product):
+    """Return a dict with guaranteed keys: name, price, stock, description."""
+    return {
+        'name': product.get('name', ''),
+        'price': product.get('price', ''),
+        'stock': product.get('stock', ''),
+        'description': product.get('description', ''),
+    }
+
+def scrape_ecommerce(url, api_key, output_file="products_output.csv"):
     app = FirecrawlApp(api_key=api_key)
     
     print(f"🚀 Iniciando scraping de: {url}")
@@ -23,14 +32,14 @@ def scrape_ecommerce(url, api_key):
         # Si no hay lista de productos, guardamos el objeto principal
         products = [data]
 
-    filename = "products_output.csv"
-    with open(filename, mode='w', newline='', encoding='utf-8') as file:
+    fieldnames = ['name', 'price', 'stock', 'description']
+    with open(output_file, mode='w', newline='', encoding='utf-8') as file:
         if products:
-            fieldnames = products[0].keys()
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
-            writer.writerows(products)
-            print(f"✅ Éxito: Datos guardados en {filename}")
+            for product in products:
+                writer.writerow(extract_product_fields(product))
+            print(f"✅ Éxito: Datos guardados en {output_file}")
         else:
             print("⚠️ No se encontraron productos para exportar.")
 
@@ -38,6 +47,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Firecrawl E-commerce Scraper")
     parser.add_argument("--url", required=True, help="URL de la tienda")
     parser.add_argument("--key", required=True, help="Firecrawl API Key")
+    parser.add_argument("--output", default="products_output.csv",
+                        help="Nombre del archivo CSV de salida")
     
     args = parser.parse_args()
-    scrape_ecommerce(args.url, args.key)
+    scrape_ecommerce(args.url, args.key, args.output)
