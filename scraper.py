@@ -2,6 +2,7 @@ import csv
 import logging
 import argparse
 import sys
+import re
 from typing import List, Dict, Any
 from typing_extensions import TypedDict
 from firecrawl import FirecrawlApp
@@ -20,13 +21,36 @@ class Product(TypedDict):
     description: str
 
 def extract_product_fields(product: Dict[str, Any]) -> Product:
-    """Return a dict with guaranteed keys: name, price, stock, description."""
+    """Return a dict with guaranteed keys: name, price, stock, description.
+    Strips whitespace from all fields and removes currency symbols from price.
+    """
+    name = str(product.get('name', '')).strip()
+    price_raw = str(product.get('price', '')).strip()
+    # Remove common currency symbols and any non-digit, non-dot, non-comma, non-minus characters
+    price_clean = re.sub(r'[^\d.,\-]', '', price_raw)
+    stock = str(product.get('stock', '')).strip()
+    description = str(product.get('description', '')).strip()
     return {
-        'name': str(product.get('name', '')),
-        'price': str(product.get('price', '')),
-        'stock': str(product.get('stock', '')),
-        'description': str(product.get('description', '')),
+        'name': name,
+        'price': price_clean,
+        'stock': stock,
+        'description': description,
     }
+
+def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Try multiple common keys to locate a list of product dicts."""
+    candidates = [
+        data.get('products', []),
+        data.get('items', []),
+        data.get('results', []),
+        data.get('data', {}).get('products', []),
+        data.get('data', {}).get('items', []),
+        data.get('data', {}).get('results', []),
+    ]
+    for candidate in candidates:
+        if isinstance(candidate, list) and len(candidate) > 0:
+            return candidate
+    return []
 
 def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output.csv") -> bool:
     try:
@@ -47,7 +71,7 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
         data = scrape_result['data']
         
         # Intentamos extraer campos comunes
-        products: List[Dict[str, Any]] = data.get('products', [])
+        products: List[Dict[str, Any]] = _find_products(data)
         if not products:
             logger.warning("⚠️ No se encontraron productos en los datos obtenidos. No se guardará ningún archivo.")
             return False
