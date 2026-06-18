@@ -72,5 +72,18 @@ class TestExtractProductFields(unittest.TestCase):
         self.assertEqual(result['stock'], '')
         self.assertEqual(result['description'], '')
 
+    def test_special_characters_and_currency(self):
+        product = {
+            'name': '  Laptop Pro  ',
+            'price': '  $1,299.99  ',
+            'stock': '  10  ',
+            'description': '  High-end laptop  '
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['name'], 'Laptop Pro')
+        self.assertEqual(result['price'], '1299.99')
+        self.assertEqual(result['stock'], '10')
+        self.assertEqual(result['description'], 'High-end laptop')
+
 if __name__ == '__main__':
     unittest.main()
