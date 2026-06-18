@@ -23,13 +23,45 @@ class Product(TypedDict):
 def extract_product_fields(product: Dict[str, Any]) -> Product:
     """Return a dict with guaranteed keys: name, price, stock, description.
     Strips whitespace from all fields and removes currency symbols from price.
+    Handles European decimal commas (e.g., 1.200,50 → 1200.50).
     """
     name = str(product.get('name', '')).strip()
     price_raw = str(product.get('price', '')).strip()
     # Remove common currency symbols and any non-digit, non-dot, non-comma, non-minus characters
     price_clean = re.sub(r'[^\d.,\-]', '', price_raw)
-    # Remove commas used as thousands separators
-    price_clean = price_clean.replace(',', '')
+
+    # Heuristic to distinguish decimal commas from thousands separators
+    if ',' in price_clean:
+        parts = price_clean.split(',')
+        # Only consider the first comma
+        before_comma = parts[0]
+        after_comma = parts[1] if len(parts) >= 2 else ''
+        # If the part after the comma has 1 or 2 digits (and is not empty),
+        # treat the comma as a decimal separator (European style).
+        if 1 <= len(after_comma) <= 2:
+            # Remove all dots (thousands separators) from the part before the comma
+            before_comma = before_comma.replace('.', '')
+            price_clean = before_comma + '.' + after_comma
+        else:
+            # Comma is a thousands separator; remove it
+            price_clean = price_clean.replace(',', '')
+    else:
+        # No comma present; decide whether dots are thousands separators or decimal
+        dot_count = price_clean.count('.')
+        if dot_count == 1:
+            # Single dot: check if the part after the dot has at most 2 digits
+            parts = price_clean.split('.')
+            if len(parts) == 2 and len(parts[1]) <= 2:
+                # Likely a decimal dot (US style) – keep as is
+                pass
+            else:
+                # Thousands separator – remove the dot
+                price_clean = price_clean.replace('.', '')
+        elif dot_count > 1:
+            # Multiple dots: all are thousands separators – remove them
+            price_clean = price_clean.replace('.', '')
+        # dot_count == 0: nothing to do
+
     stock = str(product.get('stock', '')).strip()
     description = str(product.get('description', '')).strip()
     return {
