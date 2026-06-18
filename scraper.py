@@ -3,9 +3,11 @@ import logging
 import argparse
 import sys
 import re
+import requests
 from typing import List, Dict, Any
 from typing_extensions import TypedDict
 from firecrawl import FirecrawlApp
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, retry_if_exception
 
 # Configuración de logging
 logging.basicConfig(
@@ -86,6 +88,15 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
             return candidate
     return []
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=60),
+    retry=(retry_if_exception_type(requests.exceptions.RequestException) |
+           retry_if_exception(lambda e: isinstance(e, requests.exceptions.HTTPError) and e.response.status_code == 429))
+)
+def _scrape_with_retry(app, url):
+    return app.scrape_url(url, params={'formats': ['json']})
+
 def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output.csv") -> bool:
     try:
         app = FirecrawlApp(api_key=api_key)
@@ -93,7 +104,7 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
         
         # Usamos el formato JSON para obtener datos estructurados
         try:
-            scrape_result = app.scrape_url(url, params={'formats': ['json']})
+            scrape_result = _scrape_with_retry(app, url)
         except Exception as conn_err:
             logger.error(f"❌ Error de conexión con FirecrawlApp: {conn_err}")
             return False
