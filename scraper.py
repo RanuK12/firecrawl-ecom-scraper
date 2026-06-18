@@ -28,6 +28,8 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
     price_raw = str(product.get('price', '')).strip()
     # Remove common currency symbols and any non-digit, non-dot, non-comma, non-minus characters
     price_clean = re.sub(r'[^\d.,\-]', '', price_raw)
+    # Remove commas used as thousands separators
+    price_clean = price_clean.replace(',', '')
     stock = str(product.get('stock', '')).strip()
     description = str(product.get('description', '')).strip()
     return {
