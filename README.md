@@ -6,37 +6,35 @@ A professional Python tool designed to extract structured product data from e-co
 - **Robust Scraping**: Powered by [Firecrawl](https://www.firecrawl.dev/) to bypass complex web structures.
 - **Structured Data**: Automatically extracts JSON data and flattens it for easy use.
 - **CSV Export**: Direct export to CSV for immediate integration with spreadsheets or databases.
-- **Secure Config**: Supports environment variables for safe API key management.
 
 ## 🛠️ Setup
 
 1. **Clone the repository**:
-   ```bash
+   \`\`\`bash
    git clone https://github.com/RanuK12/firecrawl-ecom-scraper.git
    cd firecrawl-ecom-scraper
-   ```
+   \`\`\`
 
 2. **Install dependencies**:
-   ```bash
+   \`\`\`bash
    pip install -r requirements.txt
-   ```
+   \`\`\`
 
-3. **Configure Environment**:
-   Create a `.env` file based on the provided example:
-   ```bash
-   cp .env.example .env
-   ```
-   *Replace `your_api_key_here` with your actual Firecrawl API key.*
+3. **Get your API Key** from [Firecrawl](https://www.firecrawl.dev/).
 
 ## 💻 Usage
 
-Run the scraper by providing the target URL:
+Run the scraper by providing the target URL and your API key:
 
-```bash
-python scraper.py --url "https://example-ecommerce-store.com"
-```
+\`\`\`bash
+python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY"
+\`\`\`
 
-The script will automatically detect your API key from the `.env` file.
+Optional: specify a custom output filename:
+
+\`\`\`bash
+python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --output "results.csv"
+\`\`\`
 
 ## 📄 License
 MIT
