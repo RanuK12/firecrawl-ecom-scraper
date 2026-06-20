@@ -85,10 +85,10 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
             return False
         # Define groups of keys that indicate a product
         name_keys = {'name', 'title'}
-        price_keys = {'price', 'amount'}
-        sku_keys = {'sku'}
-        desc_keys = {'description'}
-        stock_keys = {'stock', 'availability', 'inventory'}
+        price_keys = {'price', 'amount', 'cost', 'salePrice'}
+        sku_keys = {'sku', 'id', 'productId'}
+        desc_keys = {'description', 'desc', 'shortDescription'}
+        stock_keys = {'stock', 'availability', 'inventory', 'quantity'}
         # Count how many groups have at least one key present
         count = 0
         if any(k in item for k in name_keys):
@@ -102,6 +102,12 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
         if any(k in item for k in stock_keys):
             count += 1
         return count >= 2
+
+    # Helper to unwrap GraphQL edges[].node
+    def _unwrap(item: Any) -> Any:
+        if isinstance(item, dict) and 'node' in item:
+            return item['node']
+        return item
 
     # First try the existing flat keys
     candidates = [
@@ -129,25 +135,23 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
         elif isinstance(obj, list):
             # Evaluate this list
             if len(obj) > 0:
-                # Count how many items look like products
-                product_count = sum(1 for item in obj if _looks_like_product(item))
+                # Unwrap nodes before counting product-like items
+                unwrapped_items = [_unwrap(item) for item in obj]
+                product_count = sum(1 for item in unwrapped_items if _looks_like_product(item))
                 # Score: product_count, with tie‑breaker on depth (deeper is better)
                 # We'll prefer higher product_count, then higher depth
                 if product_count > best_score or (product_count == best_score and depth > best_depth):
                     best_score = product_count
                     best_depth = depth
-                    best_list = obj
-            # Recurse into each element
+                    best_list = unwrapped_items
+            # Recurse into each element (unwrapped for deeper search)
             for item in obj:
-                _dfs(item, depth + 1)
+                _dfs(_unwrap(item), depth + 1)
 
     _dfs(data, 0)
 
-    # If we found a list with at least one product‑like item, return it
+    # Only return a list if at least one product‑like item was found
     if best_score > 0:
-        return best_list
-    # Otherwise fall back to any non‑empty list (deepest)
-    if best_list:
         return best_list
     return []
 
