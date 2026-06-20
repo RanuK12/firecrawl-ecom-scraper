@@ -109,19 +109,6 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
             return item['node']
         return item
 
-    # First try the existing flat keys
-    candidates = [
-        data.get('products', []),
-        data.get('items', []),
-        data.get('results', []),
-        data.get('data', {}).get('products', []),
-        data.get('data', {}).get('items', []),
-        data.get('data', {}).get('results', []),
-    ]
-    for candidate in candidates:
-        if isinstance(candidate, list) and len(candidate) > 0:
-            return candidate
-
     # Recursive DFS to find product-like lists
     best_list: List[Dict[str, Any]] = []
     best_depth = -1
