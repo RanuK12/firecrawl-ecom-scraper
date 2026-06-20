@@ -74,7 +74,36 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
     }
 
 def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Try multiple common keys to locate a list of product dicts."""
+    """Try multiple common keys to locate a list of product dicts.
+    If not found, perform a recursive deep search through all dicts/arrays
+    looking for any list where the items look like products.
+    Returns the deepest/most relevant list found.
+    """
+    # Helper to decide if a dict looks like a product
+    def _looks_like_product(item: Any) -> bool:
+        if not isinstance(item, dict):
+            return False
+        # Define groups of keys that indicate a product
+        name_keys = {'name', 'title'}
+        price_keys = {'price', 'amount'}
+        sku_keys = {'sku'}
+        desc_keys = {'description'}
+        stock_keys = {'stock', 'availability', 'inventory'}
+        # Count how many groups have at least one key present
+        count = 0
+        if any(k in item for k in name_keys):
+            count += 1
+        if any(k in item for k in price_keys):
+            count += 1
+        if any(k in item for k in sku_keys):
+            count += 1
+        if any(k in item for k in desc_keys):
+            count += 1
+        if any(k in item for k in stock_keys):
+            count += 1
+        return count >= 2
+
+    # First try the existing flat keys
     candidates = [
         data.get('products', []),
         data.get('items', []),
@@ -86,6 +115,40 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     for candidate in candidates:
         if isinstance(candidate, list) and len(candidate) > 0:
             return candidate
+
+    # Recursive DFS to find product-like lists
+    best_list: List[Dict[str, Any]] = []
+    best_depth = -1
+    best_score = -1
+
+    def _dfs(obj: Any, depth: int) -> None:
+        nonlocal best_list, best_depth, best_score
+        if isinstance(obj, dict):
+            for value in obj.values():
+                _dfs(value, depth + 1)
+        elif isinstance(obj, list):
+            # Evaluate this list
+            if len(obj) > 0:
+                # Count how many items look like products
+                product_count = sum(1 for item in obj if _looks_like_product(item))
+                # Score: product_count, with tie‑breaker on depth (deeper is better)
+                # We'll prefer higher product_count, then higher depth
+                if product_count > best_score or (product_count == best_score and depth > best_depth):
+                    best_score = product_count
+                    best_depth = depth
+                    best_list = obj
+            # Recurse into each element
+            for item in obj:
+                _dfs(item, depth + 1)
+
+    _dfs(data, 0)
+
+    # If we found a list with at least one product‑like item, return it
+    if best_score > 0:
+        return best_list
+    # Otherwise fall back to any non‑empty list (deepest)
+    if best_list:
+        return best_list
     return []
 
 @retry(
