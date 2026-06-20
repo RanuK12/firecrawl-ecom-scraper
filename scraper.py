@@ -140,7 +140,7 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
                 product_count = sum(1 for item in unwrapped_items if _looks_like_product(item))
                 # Score: product_count, with tie‑breaker on depth (deeper is better)
                 # We'll prefer higher product_count, then higher depth
-                if product_count > best_score or (product_count == best_score and depth > best_depth):
+                if product_count > 0 and (product_count > best_score or (product_count == best_score and depth > best_depth)):
                     best_score = product_count
                     best_depth = depth
                     best_list = unwrapped_items
