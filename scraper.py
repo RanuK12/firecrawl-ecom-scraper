@@ -1,4 +1,5 @@
 import csv
+import json
 import logging
 import argparse
 import sys
@@ -72,6 +73,29 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
         'stock': stock,
         'description': description,
     }
+
+def save_results(products: List[Dict[str, Any]], output_file: str, fmt: str, pretty: bool) -> None:
+    """Write products to output_file in CSV or JSON format."""
+    if fmt == "csv":
+        fieldnames = ['name', 'price', 'stock', 'description']
+        with open(output_file, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            for product in products:
+                if not isinstance(product, dict):
+                    logger.warning(f"⚠️ Elemento no es un diccionario, se omite: {product}")
+                    continue
+                writer.writerow(extract_product_fields(product))
+        logger.info(f"✅ Éxito: Datos guardados en {output_file}")
+    elif fmt == "json":
+        # Extract fields for each product
+        extracted = [extract_product_fields(p) if isinstance(p, dict) else {} for p in products]
+        indent = 2 if pretty else None
+        with open(output_file, mode='w', encoding='utf-8') as file:
+            json.dump(extracted, file, indent=indent, ensure_ascii=False)
+        logger.info(f"✅ Éxito: Datos guardados en {output_file}")
+    else:
+        raise ValueError(f"Formato no soportado: {fmt}")
 
 def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Try multiple common keys to locate a list of product dicts.
@@ -151,7 +175,7 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
 def _scrape_with_retry(app, url):
     return app.scrape_url(url, params={'formats': ['json']})
 
-def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output.csv") -> bool:
+def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output.csv", fmt: str = "csv", pretty: bool = False) -> bool:
     try:
         app = FirecrawlApp(api_key=api_key)
         logger.info(f"🚀 Iniciando scraping de: {url}")
@@ -175,16 +199,7 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
             logger.warning("⚠️ No se encontraron productos en los datos obtenidos. No se guardará ningún archivo.")
             return False
 
-        fieldnames = ['name', 'price', 'stock', 'description']
-        with open(output_file, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
-            writer.writeheader()
-            for product in products:
-                if not isinstance(product, dict):
-                    logger.warning(f"⚠️ Elemento no es un diccionario, se omite: {product}")
-                    continue
-                writer.writerow(extract_product_fields(product))
-            logger.info(f"✅ Éxito: Datos guardados en {output_file}")
+        save_results(products, output_file, fmt, pretty)
         return True
                 
     except Exception as e:
@@ -197,8 +212,12 @@ if __name__ == "__main__":
     parser.add_argument("--key", required=True, help="Firecrawl API Key")
     parser.add_argument("--output", default="products_output.csv",
                         help="Nombre del archivo CSV de salida")
+    parser.add_argument("--format", choices=["csv","json"], default="csv",
+                        help="Formato de salida (csv o json)")
+    parser.add_argument("--pretty", action="store_true",
+                        help="Indentar JSON (solo aplica con --format json)")
     
     args = parser.parse_args()
-    success = scrape_ecommerce(args.url, args.key, args.output)
+    success = scrape_ecommerce(args.url, args.key, args.output, args.format, args.pretty)
     if not success:
         sys.exit(1)
