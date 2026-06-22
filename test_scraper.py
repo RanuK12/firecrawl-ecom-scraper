@@ -1,5 +1,9 @@
 import unittest
-from scraper import extract_product_fields
+import os
+import tempfile
+import csv
+import json
+from scraper import extract_product_fields, save_results
 
 class TestExtractProductFields(unittest.TestCase):
 
@@ -146,6 +150,135 @@ def test_looks_like_product_false():
     data = {'items': [{'foo': 'bar', 'baz': 123}]}
     result = _find_products(data)
     assert result == []
+
+def test_save_results_csv():
+    '''save_results writes CSV with correct fields.'''
+    from scraper import save_results
+    products = [
+        {'name': 'Laptop', 'price': '999.99', 'stock': '10', 'description': 'High performance laptop'},
+        {'name': 'Phone', 'price': '499.99', 'stock': '5', 'description': 'Smartphone'},
+    ]
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        tmp_path = f.name
+    try:
+        save_results(products, tmp_path, fmt='csv', pretty=False)
+        assert os.path.exists(tmp_path)
+        with open(tmp_path, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+        assert len(rows) == 2
+        assert rows[0]['name'] == 'Laptop'
+        assert rows[0]['price'] == '999.99'
+        assert rows[0]['stock'] == '10'
+        assert rows[0]['description'] == 'High performance laptop'
+        assert rows[1]['name'] == 'Phone'
+        assert rows[1]['price'] == '499.99'
+        assert rows[1]['stock'] == '5'
+        assert rows[1]['description'] == 'Smartphone'
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+def test_save_results_json():
+    '''save_results writes JSON with correct fields.'''
+    from scraper import save_results
+    products = [
+        {'name': 'Laptop', 'price': '999.99', 'stock': '10', 'description': 'High performance laptop'},
+        {'name': 'Phone', 'price': '499.99', 'stock': '5', 'description': 'Smartphone'},
+    ]
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        tmp_path = f.name
+    try:
+        save_results(products, tmp_path, fmt='json', pretty=False)
+        assert os.path.exists(tmp_path)
+        with open(tmp_path, encoding='utf-8') as f:
+            data = json.load(f)
+        assert len(data) == 2
+        assert data[0]['name'] == 'Laptop'
+        assert data[0]['price'] == '999.99'
+        assert data[0]['stock'] == '10'
+        assert data[0]['description'] == 'High performance laptop'
+        assert data[1]['name'] == 'Phone'
+        assert data[1]['price'] == '499.99'
+        assert data[1]['stock'] == '5'
+        assert data[1]['description'] == 'Smartphone'
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+def test_save_results_json_pretty():
+    '''save_results with pretty=True produces indented JSON (contains newlines).'''
+    from scraper import save_results
+    products = [{'name': 'Test', 'price': '10', 'stock': '1', 'description': 'desc'}]
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        tmp_path = f.name
+    try:
+        save_results(products, tmp_path, fmt='json', pretty=True)
+        assert os.path.exists(tmp_path)
+        with open(tmp_path, encoding='utf-8') as f:
+            content = f.read()
+        assert '\n' in content
+        data = json.loads(content)
+        assert len(data) == 1
+        assert data[0]['name'] == 'Test'
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+def test_save_results_non_dict():
+    '''save_results skips non-dict items with a warning.'''
+    from scraper import save_results
+    products = [
+        {'name': 'Valid', 'price': '10', 'stock': '1', 'description': 'ok'},
+        'not a dict',
+        123,
+        {'name': 'Also valid', 'price': '20', 'stock': '2', 'description': 'good'},
+    ]
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        tmp_path = f.name
+    try:
+        save_results(products, tmp_path, fmt='csv', pretty=False)
+        assert os.path.exists(tmp_path)
+        with open(tmp_path, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+        # Only the two dict items should be written
+        assert len(rows) == 2
+        assert rows[0]['name'] == 'Valid'
+        assert rows[1]['name'] == 'Also valid'
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+def test_save_results_empty():
+    '''save_results with empty list creates CSV with only headers or JSON [].'''
+    from scraper import save_results
+    products = []
+    # CSV
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        csv_path = f.name
+    try:
+        save_results(products, csv_path, fmt='csv', pretty=False)
+        assert os.path.exists(csv_path)
+        with open(csv_path, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+        assert rows == []  # only headers, no data rows
+    finally:
+        if os.path.exists(csv_path):
+            os.unlink(csv_path)
+    # JSON
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        json_path = f.name
+    try:
+        save_results(products, json_path, fmt='json', pretty=False)
+        assert os.path.exists(json_path)
+        with open(json_path, encoding='utf-8') as f:
+            data = json.load(f)
+        assert data == []
+    finally:
+        if os.path.exists(json_path):
+            os.unlink(json_path)
 
 if __name__ == '__main__':
     unittest.main()
