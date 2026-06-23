@@ -282,5 +282,47 @@ class TestFindAndSaveProducts(unittest.TestCase):
             if os.path.exists(json_path):
                 os.unlink(json_path)
 
+    def test_save_results_limit(self):
+        '''save_results with limit parameter restricts rows.'''
+        from scraper import save_results
+        products = [
+            {'name': 'Prod1', 'price': '10', 'stock': '1', 'description': 'desc1'},
+            {'name': 'Prod2', 'price': '20', 'stock': '2', 'description': 'desc2'},
+            {'name': 'Prod3', 'price': '30', 'stock': '3', 'description': 'desc3'},
+            {'name': 'Prod4', 'price': '40', 'stock': '4', 'description': 'desc4'},
+            {'name': 'Prod5', 'price': '50', 'stock': '5', 'description': 'desc5'},
+        ]
+        # Test limit=3
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            save_results(products, tmp_path, fmt='csv', pretty=False, limit=3)
+            self.assertTrue(os.path.exists(tmp_path))
+            with open(tmp_path, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            self.assertEqual(len(rows), 3)
+            self.assertEqual(rows[0]['name'], 'Prod1')
+            self.assertEqual(rows[1]['name'], 'Prod2')
+            self.assertEqual(rows[2]['name'], 'Prod3')
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+        # Test limit=0 (no limit)
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            save_results(products, tmp_path, fmt='csv', pretty=False, limit=0)
+            self.assertTrue(os.path.exists(tmp_path))
+            with open(tmp_path, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            self.assertEqual(len(rows), 5)
+            self.assertEqual(rows[0]['name'], 'Prod1')
+            self.assertEqual(rows[4]['name'], 'Prod5')
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
 if __name__ == '__main__':
     unittest.main()
