@@ -74,8 +74,11 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
         'description': description,
     }
 
-def save_results(products: List[Dict[str, Any]], output_file: str, fmt: str, pretty: bool) -> None:
-    """Write products to output_file in CSV or JSON format."""
+def save_results(products: List[Dict[str, Any]], output_file: str, fmt: str, pretty: bool, limit: int = 0) -> None:
+    """Write products to output_file in CSV or JSON format.
+    If limit > 0, only the first `limit` products are saved."""
+    if limit > 0:
+        products = products[:limit]
     if fmt == "csv":
         fieldnames = ['name', 'price', 'stock', 'description']
         with open(output_file, mode='w', newline='', encoding='utf-8') as file:
@@ -175,7 +178,7 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
 def _scrape_with_retry(app, url):
     return app.scrape_url(url, params={'formats': ['json']})
 
-def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output.csv", fmt: str = "csv", pretty: bool = False) -> bool:
+def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output.csv", fmt: str = "csv", pretty: bool = False, limit: int = 0) -> bool:
     try:
         app = FirecrawlApp(api_key=api_key)
         logger.info(f"🚀 Iniciando scraping de: {url}")
@@ -199,7 +202,7 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
             logger.warning("⚠️ No se encontraron productos en los datos obtenidos. No se guardará ningún archivo.")
             return False
 
-        save_results(products, output_file, fmt, pretty)
+        save_results(products, output_file, fmt, pretty, limit=limit)
         return True
                 
     except Exception as e:
@@ -216,8 +219,10 @@ if __name__ == "__main__":
                         help="Formato de salida (csv o json)")
     parser.add_argument("--pretty", action="store_true",
                         help="Indentar JSON (solo aplica con --format json)")
+    parser.add_argument("--limit", type=int, default=0,
+                        help="Número máximo de productos a guardar (0 = sin límite)")
     
     args = parser.parse_args()
-    success = scrape_ecommerce(args.url, args.key, args.output, args.format, args.pretty)
+    success = scrape_ecommerce(args.url, args.key, args.output, args.format, args.pretty, limit=args.limit)
     if not success:
         sys.exit(1)
