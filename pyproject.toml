@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "firecrawl-ecom-scraper"
+version = "0.1.0"
+description = "Extract structured product data from e-commerce websites using Firecrawl"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "firecrawl-py",
+    "requests>=2.31",
+    "tenacity>=8.2",
+    "typing-extensions>=4.8",
+]
+
+[project.urls]
+Homepage = "https://github.com/RanuK12/firecrawl-ecom-scraper"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["scraper*"]
