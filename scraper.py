@@ -65,6 +65,10 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
             price_clean = price_clean.replace('.', '')
         # dot_count == 0: nothing to do
 
+    # If after all processing the price is empty, just '-' (a dash), or non-numeric, return empty string
+    if not price_clean or price_clean in ('-', '--', '-.', '.-') or not re.search(r'\d', price_clean):
+        price_clean = ''
+
     stock = str(product.get('stock', '')).strip()
     description = str(product.get('description', '')).strip()
     return {

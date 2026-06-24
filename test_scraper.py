@@ -324,5 +324,38 @@ class TestFindAndSaveProducts(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
+    def test_price_dash_only(self):
+        """Price with just a dash should return empty string."""
+        product = {
+            'name': 'Product',
+            'price': '-',
+            'stock': '5',
+            'description': 'Test'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['price'], '')
+
+    def test_price_non_numeric(self):
+        """Price with no digits at all should return empty string."""
+        product = {
+            'name': 'Product',
+            'price': 'Free',
+            'stock': '5',
+            'description': 'Test'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['price'], '')
+
+    def test_price_contact_us(self):
+        """Price like 'Contact us' should return empty string."""
+        product = {
+            'name': 'Product',
+            'price': 'Contact us for price',
+            'stock': '5',
+            'description': 'Test'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['price'], '')
+
 if __name__ == '__main__':
     unittest.main()
