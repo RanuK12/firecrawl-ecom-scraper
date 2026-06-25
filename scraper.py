@@ -225,8 +225,19 @@ if __name__ == "__main__":
                         help="Indentar JSON (solo aplica con --format json)")
     parser.add_argument("--limit", type=int, default=0,
                         help="Número máximo de productos a guardar (0 = sin límite)")
+    parser.add_argument("--quiet", action="store_true",
+                        help="Suprimir mensajes INFO, solo mostrar advertencias y errores")
+    parser.add_argument("--version", action="version",
+                        version="firecrawl-ecom-scraper 1.0.0",
+                        help="Mostrar la versión y salir")
     
     args = parser.parse_args()
-    success = scrape_ecommerce(args.url, args.key, args.output, args.format, args.pretty, limit=args.limit)
-    if not success:
-        sys.exit(1)
+    if args.quiet:
+        logger.setLevel(logging.WARNING)
+    try:
+        success = scrape_ecommerce(args.url, args.key, args.output, args.format, args.pretty, limit=args.limit)
+        if not success:
+            sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n⏹️  Scraping interrumpido por el usuario.")
+        sys.exit(130)
