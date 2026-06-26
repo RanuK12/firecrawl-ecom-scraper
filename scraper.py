@@ -4,6 +4,7 @@ import logging
 import argparse
 import sys
 import re
+import os
 import requests
 from typing import List, Dict, Any
 from typing_extensions import TypedDict
@@ -182,6 +183,15 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
 def _scrape_with_retry(app, url):
     return app.scrape_url(url, params={'formats': ['json']})
 
+def _infer_format(output_file: str, explicit_fmt: str | None = None) -> str:
+    """Infer output format from file extension. explicit_fmt (if not None) takes priority."""
+    if explicit_fmt is not None and explicit_fmt in ("csv", "json"):
+        return explicit_fmt
+    ext = os.path.splitext(output_file)[1].lower()
+    if ext == ".json":
+        return "json"
+    return "csv"
+
 def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output.csv", fmt: str = "csv", pretty: bool = False, limit: int = 0) -> bool:
     try:
         app = FirecrawlApp(api_key=api_key)
@@ -234,8 +244,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.quiet:
         logger.setLevel(logging.WARNING)
+    # Infer format from file extension if --format is default "csv" and extension is .json
+    fmt = args.format if args.format != "csv" or not args.output.lower().endswith(".json") else "json"
     try:
-        success = scrape_ecommerce(args.url, args.key, args.output, args.format, args.pretty, limit=args.limit)
+        success = scrape_ecommerce(args.url, args.key, args.output, fmt, args.pretty, limit=args.limit)
         if not success:
             sys.exit(1)
     except KeyboardInterrupt:
