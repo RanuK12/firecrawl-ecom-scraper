@@ -3,7 +3,7 @@ import os
 import tempfile
 import csv
 import json
-from scraper import extract_product_fields, save_results
+from scraper import extract_product_fields, save_results, _infer_format
 
 class TestExtractProductFields(unittest.TestCase):
 
@@ -356,6 +356,29 @@ class TestFindAndSaveProducts(unittest.TestCase):
         }
         result = extract_product_fields(product)
         self.assertEqual(result['price'], '')
+
+class TestInferFormat(unittest.TestCase):
+    """Tests for _infer_format auto-detection from file extension."""
+
+    def test_json_extension(self):
+        self.assertEqual(_infer_format("output.json"), "json")
+        self.assertEqual(_infer_format("data/products.json"), "json")
+
+    def test_csv_extension(self):
+        self.assertEqual(_infer_format("output.csv"), "csv")
+        self.assertEqual(_infer_format("data/products.csv"), "csv")
+
+    def test_no_extension_defaults_csv(self):
+        self.assertEqual(_infer_format("output"), "csv")
+        self.assertEqual(_infer_format("products"), "csv")
+
+    def test_explicit_fmt_priority(self):
+        self.assertEqual(_infer_format("output.json", explicit_fmt="csv"), "csv")
+        self.assertEqual(_infer_format("output.csv", explicit_fmt="json"), "json")
+
+    def test_unknown_extension_defaults_csv(self):
+        self.assertEqual(_infer_format("output.txt"), "csv")
+        self.assertEqual(_infer_format("data.xyz"), "csv")
 
 if __name__ == '__main__':
     unittest.main()
