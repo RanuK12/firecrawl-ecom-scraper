@@ -56,6 +56,46 @@ class TestExtractProductFields(unittest.TestCase):
         self.assertEqual(result['stock'], '3')
         self.assertEqual(result['description'], '')
 
+    def test_european_price_formats(self):
+        # Precios con separador de miles y coma como decimal (formato europeo)
+        product = {
+            'name': 'Smartphone',
+            'price': '1.200,50',  # 1200.50
+            'stock': '25',
+            'description': 'Smartphone de alta gama'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['name'], 'Smartphone')
+        self.assertEqual(result['price'], '1200.50')
+        self.assertEqual(result['stock'], '25')
+        self.assertEqual(result['description'], 'Smartphone de alta gama')
+
+        # Precio sin separador de miles
+        product = {
+            'name': 'Tablet',
+            'price': '499,99',  # 499.99
+            'stock': '12',
+            'description': 'Tablet con pantalla táctil'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['name'], 'Tablet')
+        self.assertEqual(result['price'], '499.99')
+        self.assertEqual(result['stock'], '12')
+        self.assertEqual(result['description'], 'Tablet con pantalla táctil')
+
+        # Precio con separador de miles y sin decimales
+        product = {
+            'name': 'Televisor',
+            'price': '1.599',  # 1599
+            'stock': '8',
+            'description': 'Televisor 4K 55"'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['name'], 'Televisor')
+        self.assertEqual(result['price'], '1599')
+        self.assertEqual(result['stock'], '8')
+        self.assertEqual(result['description'], 'Televisor 4K 55"')
+
     def test_missing_name(self):
         product = {
             'price': '49.99',
