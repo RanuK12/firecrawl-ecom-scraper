@@ -193,6 +193,24 @@ def _infer_format(output_file: str, explicit_fmt: str | None = None) -> str:
     return "csv"
 
 def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output.csv", fmt: str = "csv", pretty: bool = False, limit: int = 0) -> bool:
+    """Scrape product data from an e-commerce URL using Firecrawl API.
+    
+    This is the main entry point for the scraper. It fetches structured data from the
+    given URL, automatically detects product listings in the response (handling various
+    JSON structures including GraphQL edges), normalizes the extracted fields, and saves
+    the results to a file.
+    
+    Args:
+        url: The e-commerce URL to scrape.
+        api_key: Firecrawl API key for authentication.
+        output_file: Path to the output file. Defaults to "products_output.csv".
+        fmt: Output format, either "csv" or "json". Defaults to "csv".
+        pretty: If True, indent JSON output. Only applies when fmt is "json". Defaults to False.
+        limit: Maximum number of products to save. 0 means no limit. Defaults to 0.
+    
+    Returns:
+        True if scraping and saving succeeded, False otherwise.
+    """
     try:
         app = FirecrawlApp(api_key=api_key)
         logger.info(f"🚀 Iniciando scraping de: {url}")
