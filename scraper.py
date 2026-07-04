@@ -1,4 +1,6 @@
-import csv
+'''Firecrawl E-commerce Scraper module.
+Provides utilities to extract product data from e-commerce sites using Firecrawl SDK.
+'''\nimport csv
 import json
 import logging
 import argparse
