@@ -3,7 +3,9 @@ import os
 import tempfile
 import csv
 import json
-from scraper import extract_product_fields, save_results, _infer_format
+from unittest.mock import patch, MagicMock
+import requests
+from scraper import extract_product_fields, save_results, _infer_format, scrape_ecommerce
 
 class TestExtractProductFields(unittest.TestCase):
 
@@ -419,6 +421,146 @@ class TestInferFormat(unittest.TestCase):
     def test_unknown_extension_defaults_csv(self):
         self.assertEqual(_infer_format("output.txt"), "csv")
         self.assertEqual(_infer_format("data.xyz"), "csv")
+
+class TestScrapeEcommerceErrors(unittest.TestCase):
+    """Tests for error handling in scrape_ecommerce."""
+
+    @patch('scraper.FirecrawlApp')
+    def test_connection_error_returns_false(self, mock_firecrawl_class):
+        """scrape_ecommerce returns False when connection fails."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.side_effect = requests.exceptions.ConnectionError("Connection failed")
+
+        result = scrape_ecommerce(
+            url="https://example.com",
+            api_key="test-key",
+            output_file="test.csv"
+        )
+        self.assertFalse(result)
+
+    @patch('scraper.FirecrawlApp')
+    def test_timeout_error_returns_false(self, mock_firecrawl_class):
+        """scrape_ecommerce returns False when request times out."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.side_effect = requests.exceptions.Timeout("Request timed out")
+
+        result = scrape_ecommerce(
+            url="https://example.com",
+            api_key="test-key",
+            output_file="test.csv"
+        )
+        self.assertFalse(result)
+
+    @patch('scraper.FirecrawlApp')
+    def test_rate_limit_429_returns_false(self, mock_firecrawl_class):
+        """scrape_ecommerce returns False when API returns 429 rate limit error."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_response = MagicMock()
+        mock_response.status_code = 429
+        http_error = requests.exceptions.HTTPError("429 Too Many Requests")
+        http_error.response = mock_response
+        mock_app.scrape_url.side_effect = http_error
+
+        result = scrape_ecommerce(
+            url="https://example.com",
+            api_key="test-key",
+            output_file="test.csv"
+        )
+        self.assertFalse(result)
+
+    @patch('scraper.FirecrawlApp')
+    def test_no_data_returns_false(self, mock_firecrawl_class):
+        """scrape_ecommerce returns False when no data is returned."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = None
+
+        result = scrape_ecommerce(
+            url="https://example.com",
+            api_key="test-key",
+            output_file="test.csv"
+        )
+        self.assertFalse(result)
+
+    @patch('scraper.FirecrawlApp')
+    def test_empty_data_returns_false(self, mock_firecrawl_class):
+        """scrape_ecommerce returns False when data dict is empty."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {}
+
+        result = scrape_ecommerce(
+            url="https://example.com",
+            api_key="test-key",
+            output_file="test.csv"
+        )
+        self.assertFalse(result)
+
+    @patch('scraper.FirecrawlApp')
+    def test_no_products_found_returns_false(self, mock_firecrawl_class):
+        """scrape_ecommerce returns False when no products are found in data."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {'some_key': 'some_value', 'other': [1, 2, 3]}
+        }
+
+        result = scrape_ecommerce(
+            url="https://example.com",
+            api_key="test-key",
+            output_file="test.csv"
+        )
+        self.assertFalse(result)
+
+    @patch('scraper.FirecrawlApp')
+    def test_unexpected_exception_returns_false(self, mock_firecrawl_class):
+        """scrape_ecommerce returns False when an unexpected exception occurs."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.side_effect = ValueError("Unexpected error")
+
+        result = scrape_ecommerce(
+            url="https://example.com",
+            api_key="test-key",
+            output_file="test.csv"
+        )
+        self.assertFalse(result)
+
+    @patch('scraper.FirecrawlApp')
+    def test_success_with_valid_products(self, mock_firecrawl_class):
+        """scrape_ecommerce returns True when products are found and saved."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'products': [
+                    {'name': 'Laptop', 'price': '999.99', 'stock': '10', 'description': 'A laptop'},
+                    {'name': 'Phone', 'price': '499.99', 'stock': '5', 'description': 'A phone'},
+                ]
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            result = scrape_ecommerce(
+                url="https://example.com",
+                api_key="test-key",
+                output_file=tmp_path
+            )
+            self.assertTrue(result)
+            self.assertTrue(os.path.exists(tmp_path))
+            with open(tmp_path, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows[0]['name'], 'Laptop')
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
 
 if __name__ == '__main__':
     unittest.main()
