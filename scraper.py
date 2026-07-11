@@ -34,6 +34,11 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
     # Remove common currency symbols and any non-digit, non-dot, non-comma, non-minus characters
     price_clean = re.sub(r'[^\d.,\-]', '', price_raw)
 
+    # Handle negative prices
+    is_negative = price_clean.startswith('-')
+    if is_negative:
+        price_clean = price_clean[1:]
+
     # Heuristic to distinguish decimal commas from thousands separators
     if ',' in price_clean:
         parts = price_clean.split(',')
@@ -49,6 +54,15 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
         else:
             # Comma is a thousands separator; remove it
             price_clean = price_clean.replace(',', '')
+    
+    # Handle multiple decimal points (e.g., '19.99.99' → '19.99')
+    if price_clean.count('.') > 1:
+        parts = price_clean.split('.')
+        price_clean = '.'.join(parts[:2])
+
+    # Restore negative sign if needed
+    if is_negative:
+        price_clean = '-' + price_clean
     else:
         # No comma present; decide whether dots are thousands separators or decimal
         dot_count = price_clean.count('.')
