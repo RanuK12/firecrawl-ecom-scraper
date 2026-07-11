@@ -58,6 +58,56 @@ class TestExtractProductFields(unittest.TestCase):
         self.assertEqual(result['stock'], '3')
         self.assertEqual(result['description'], '')
 
+    def test_european_decimal_comma(self):
+        product = {
+            'name': 'Laptop',
+            'price': '1.200,50',
+            'stock': '5',
+            'description': 'High performance laptop'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['price'], '1200.50')
+
+    def test_negative_price_with_comma(self):
+        product = {
+            'name': 'Phone',
+            'price': '-99,99',
+            'stock': '10',
+            'description': 'Smartphone'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['price'], '-99.99')
+
+    def test_multiple_decimal_points(self):
+        product = {
+            'name': 'Tablet',
+            'price': '19.99.99',
+            'stock': '8',
+            'description': 'A nice tablet'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['price'], '19.99')
+
+    def test_price_with_only_thousands_separator(self):
+        product = {
+            'name': 'Monitor',
+            'price': '1,200',
+            'stock': '3',
+            'description': 'A monitor'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['price'], '1200')
+
+    def test_price_with_currency_symbols(self):
+        product = {
+            'name': 'Keyboard',
+            'price': '$129.99 USD',
+            'stock': '15',
+            'description': 'Mechanical keyboard'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['price'], '129.99')
+
     def test_european_price_formats(self):
         # Precios con separador de miles y coma como decimal (formato europeo)
         product = {
