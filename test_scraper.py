@@ -181,6 +181,16 @@ class TestExtractProductFields(unittest.TestCase):
         self.assertEqual(result['stock'], '10')
         self.assertEqual(result['description'], 'High-end laptop')
 
+    def test_price_comma(self):
+        product = {
+            'name': 'Laptop',
+            'price': '1.200,50',
+            'stock': '5',
+            'description': 'High performance laptop'
+        }
+        result = extract_product_fields(product)
+        self.assertEqual(result['price'], '1200.50')
+
 class TestFindAndSaveProducts(unittest.TestCase):
 
     def test_find_products_flat_keys(self):
