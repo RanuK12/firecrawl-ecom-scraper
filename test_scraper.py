@@ -612,5 +612,333 @@ class TestScrapeEcommerceErrors(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
+class TestScrapeEcommerceFunctionality(unittest.TestCase):
+    """Tests for core scraper functionality and integration."""
+
+    @patch('scraper.FirecrawlApp')
+    def test_success_with_json_output(self, mock_firecrawl_class):
+        """scrape_ecommerce writes JSON output correctly."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'items': [
+                    {'name': 'Keyboard', 'price': '79.99', 'stock': '20', 'description': 'Mechanical'},
+                    {'name': 'Mouse', 'price': '29.99', 'stock': '50', 'description': 'Wireless'},
+                ]
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            tmp_path = f.name
+        try:
+            result = scrape_ecommerce(
+                url="https://example.com",
+                api_key="test-key",
+                output_file=tmp_path,
+                fmt="json"
+            )
+            self.assertTrue(result)
+            with open(tmp_path, encoding='utf-8') as f:
+                data = json.load(f)
+            self.assertEqual(len(data), 2)
+            self.assertEqual(data[0]['name'], 'Keyboard')
+            self.assertEqual(data[0]['price'], '79.99')
+            self.assertEqual(data[1]['name'], 'Mouse')
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    @patch('scraper.FirecrawlApp')
+    def test_success_with_limit(self, mock_firecrawl_class):
+        """scrape_ecommerce respects the limit parameter."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'products': [
+                    {'name': 'Prod1', 'price': '10', 'stock': '1', 'description': 'd1'},
+                    {'name': 'Prod2', 'price': '20', 'stock': '2', 'description': 'd2'},
+                    {'name': 'Prod3', 'price': '30', 'stock': '3', 'description': 'd3'},
+                    {'name': 'Prod4', 'price': '40', 'stock': '4', 'description': 'd4'},
+                ]
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            result = scrape_ecommerce(
+                url="https://example.com",
+                api_key="test-key",
+                output_file=tmp_path,
+                limit=2
+            )
+            self.assertTrue(result)
+            with open(tmp_path, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows[0]['name'], 'Prod1')
+            self.assertEqual(rows[1]['name'], 'Prod2')
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    @patch('scraper.FirecrawlApp')
+    def test_success_with_pretty_json(self, mock_firecrawl_class):
+        """scrape_ecommerce with pretty=True produces indented JSON."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'products': [
+                    {'name': 'Test', 'price': '10', 'stock': '1', 'description': 'desc'},
+                ]
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            tmp_path = f.name
+        try:
+            result = scrape_ecommerce(
+                url="https://example.com",
+                api_key="test-key",
+                output_file=tmp_path,
+                fmt="json",
+                pretty=True
+            )
+            self.assertTrue(result)
+            with open(tmp_path, encoding='utf-8') as f:
+                content = f.read()
+            self.assertIn('\n', content)
+            data = json.loads(content)
+            self.assertEqual(len(data), 1)
+            self.assertEqual(data[0]['name'], 'Test')
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    @patch('scraper.FirecrawlApp')
+    def test_success_with_graphql_edges(self, mock_firecrawl_class):
+        """scrape_ecommerce correctly unwraps GraphQL edges[].node structures."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'products': {
+                    'edges': [
+                        {'node': {'name': 'Widget A', 'price': '15.99', 'stock': '100', 'description': 'Widget A desc'}},
+                        {'node': {'name': 'Widget B', 'price': '25.99', 'stock': '50', 'description': 'Widget B desc'}},
+                        {'node': {'name': 'Widget C', 'price': '35.99', 'stock': '25', 'description': 'Widget C desc'}},
+                    ]
+                }
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            result = scrape_ecommerce(
+                url="https://example.com",
+                api_key="test-key",
+                output_file=tmp_path
+            )
+            self.assertTrue(result)
+            with open(tmp_path, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            self.assertEqual(len(rows), 3)
+            self.assertEqual(rows[0]['name'], 'Widget A')
+            self.assertEqual(rows[1]['name'], 'Widget B')
+            self.assertEqual(rows[2]['name'], 'Widget C')
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    @patch('scraper.FirecrawlApp')
+    def test_success_with_deeply_nested_products(self, mock_firecrawl_class):
+        """scrape_ecommerce finds products in deeply nested structures."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'catalog': {
+                    'category': {
+                        'products': {
+                            'nodes': [
+                                {'name': 'Deep1', 'price': '100', 'stock': '5', 'description': 'Deeply nested 1'},
+                                {'name': 'Deep2', 'price': '200', 'stock': '3', 'description': 'Deeply nested 2'},
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            result = scrape_ecommerce(
+                url="https://example.com",
+                api_key="test-key",
+                output_file=tmp_path
+            )
+            self.assertTrue(result)
+            with open(tmp_path, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows[0]['name'], 'Deep1')
+            self.assertEqual(rows[1]['name'], 'Deep2')
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    @patch('scraper.FirecrawlApp')
+    def test_success_with_price_normalization(self, mock_firecrawl_class):
+        """scrape_ecommerce normalizes European price formats in the output."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'products': [
+                    {'name': 'Euro Product', 'price': '1.299,99 €', 'stock': '10', 'description': 'European format'},
+                    {'name': 'US Product', 'price': '$1,299.99', 'stock': '5', 'description': 'US format'},
+                ]
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            result = scrape_ecommerce(
+                url="https://example.com",
+                api_key="test-key",
+                output_file=tmp_path
+            )
+            self.assertTrue(result)
+            with open(tmp_path, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(rows[0]['name'], 'Euro Product')
+            self.assertEqual(rows[0]['price'], '1299.99')
+            self.assertEqual(rows[1]['name'], 'US Product')
+            self.assertEqual(rows[1]['price'], '1299.99')
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    @patch('scraper.FirecrawlApp')
+    def test_api_key_passed_to_firecrawl(self, mock_firecrawl_class):
+        """scrape_ecommerce passes the API key to FirecrawlApp."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'products': [
+                    {'name': 'Test', 'price': '10', 'stock': '1', 'description': 'desc'},
+                ]
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            scrape_ecommerce(
+                url="https://example.com",
+                api_key="my-secret-key",
+                output_file=tmp_path
+            )
+            mock_firecrawl_class.assert_called_once_with(api_key="my-secret-key")
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    @patch('scraper.FirecrawlApp')
+    def test_scrape_url_called_with_json_format(self, mock_firecrawl_class):
+        """scrape_ecommerce calls scrape_url with JSON format parameter."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'products': [
+                    {'name': 'Test', 'price': '10', 'stock': '1', 'description': 'desc'},
+                ]
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            scrape_ecommerce(
+                url="https://shop.example.com",
+                api_key="test-key",
+                output_file=tmp_path
+            )
+            mock_app.scrape_url.assert_called_once_with(
+                "https://shop.example.com",
+                params={'formats': ['json']}
+            )
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    @patch('scraper.FirecrawlApp')
+    def test_success_returns_true(self, mock_firecrawl_class):
+        """scrape_ecommerce returns True on successful scrape."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'products': [
+                    {'name': 'Item', 'price': '5', 'stock': '1', 'description': 'ok'},
+                ]
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            result = scrape_ecommerce(
+                url="https://example.com",
+                api_key="test-key",
+                output_file=tmp_path
+            )
+            self.assertTrue(result)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+    @patch('scraper.FirecrawlApp')
+    def test_csv_headers_are_correct(self, mock_firecrawl_class):
+        """scrape_ecommerce CSV output has the correct header row."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {
+            'data': {
+                'products': [
+                    {'name': 'A', 'price': '1', 'stock': '1', 'description': 'd'},
+                ]
+            }
+        }
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            tmp_path = f.name
+        try:
+            scrape_ecommerce(
+                url="https://example.com",
+                api_key="test-key",
+                output_file=tmp_path
+            )
+            with open(tmp_path, newline='', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                headers = next(reader)
+            self.assertEqual(headers, ['name', 'price', 'stock', 'description'])
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
 if __name__ == '__main__':
     unittest.main()
