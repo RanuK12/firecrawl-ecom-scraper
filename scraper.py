@@ -11,12 +11,25 @@ from typing_extensions import TypedDict
 from firecrawl import FirecrawlApp
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, retry_if_exception
 
+# Rich imports for pretty terminal output (optional — gated by --no-rich)
+try:
+    from rich.console import Console
+    from rich.table import Table
+    from rich.panel import Panel
+    from rich.progress import Progress, SpinnerColumn, TextColumn
+    from rich import box
+    RICH_AVAILABLE = True
+except ImportError:
+    RICH_AVAILABLE = False
+
 # Configuración de logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+console = Console() if RICH_AVAILABLE else None
 
 class Product(TypedDict):
     name: str
@@ -93,7 +106,7 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
         'description': description,
     }
 
-def save_results(products: List[Dict[str, Any]], output_file: str, fmt: str, pretty: bool, limit: int = 0) -> None:
+def save_results(products: List[Dict[str, Any]], output_file: str, fmt: str, pretty: bool, limit: int = 0, use_rich: bool = True) -> None:
     """Write products to output_file in CSV or JSON format.
     If limit > 0, only the first `limit` products are saved."""
     if limit > 0:
@@ -108,16 +121,52 @@ def save_results(products: List[Dict[str, Any]], output_file: str, fmt: str, pre
                     logger.warning(f"⚠️ Elemento no es un diccionario, se omite: {product}")
                     continue
                 writer.writerow(extract_product_fields(product))
-        logger.info(f"✅ Éxito: Datos guardados en {output_file}")
     elif fmt == "json":
         # Extract fields for each product
         extracted = [extract_product_fields(p) if isinstance(p, dict) else {} for p in products]
         indent = 2 if pretty else None
         with open(output_file, mode='w', encoding='utf-8') as file:
             json.dump(extracted, file, indent=indent, ensure_ascii=False)
-        logger.info(f"✅ Éxito: Datos guardados en {output_file}")
     else:
         raise ValueError(f"Formato no soportado: {fmt}")
+
+    # Rich terminal output
+    if use_rich and RICH_AVAILABLE and console is not None:
+        _print_rich_output(products, output_file, fmt)
+    else:
+        logger.info(f"✅ Éxito: {len(products)} productos guardados en {output_file}")
+
+
+def _print_rich_output(products: List[Dict[str, Any]], output_file: str, fmt: str) -> None:
+    """Print a Rich table of products and a summary panel."""
+    # Table of first 10 products
+    table = Table(title="🛒 Productos Encontrados", box=box.ROUNDED, header_style="bold cyan", title_style="bold white")
+    table.add_column("#", style="dim", width=4, justify="right")
+    table.add_column("Nombre", style="white", max_width=40, overflow="ellipsis")
+    table.add_column("Precio", style="green", justify="right", width=12)
+    table.add_column("Stock", style="yellow", width=12)
+    table.add_column("Descripción", style="dim", max_width=50, overflow="ellipsis")
+
+    displayed = products[:10]
+    for i, product in enumerate(displayed, 1):
+        fields = extract_product_fields(product) if isinstance(product, dict) else {'name': '', 'price': '', 'stock': '', 'description': ''}
+        table.add_row(
+            str(i),
+            fields.get('name', '')[:36],
+            fields.get('price', ''),
+            fields.get('stock', '')[:12],
+            fields.get('description', '')[:50],
+        )
+
+    console.print(table)
+
+    # Summary panel
+    total = len(products)
+    summary_text = f"[bold white]Archivo:[/] [cyan]{output_file}[/]\n[bold white]Formato:[/] [cyan]{fmt.upper()}[/]\n[bold white]Productos:[/] [green]{total}[/]"
+    if len(products) > 10:
+        summary_text += f"\n[dim](mostrando primeros 10 de {total})[/]"
+
+    console.print(Panel(summary_text, title="📦 Resumen", border_style="cyan", box=box.ROUNDED))
 
 def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Try multiple common keys to locate a list of product dicts.
@@ -206,7 +255,7 @@ def _infer_format(output_file: str, explicit_fmt: str | None = None) -> str:
         return "json"
     return "csv"
 
-def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output.csv", fmt: str = "csv", pretty: bool = False, limit: int = 0) -> bool:
+def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output.csv", fmt: str = "csv", pretty: bool = False, limit: int = 0, use_rich: bool = True) -> bool:
     """Scrape product data from an e-commerce URL using Firecrawl API.
     
     This is the main entry point for the scraper. It fetches structured data from the
@@ -221,20 +270,30 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
         fmt: Output format, either "csv" or "json". Defaults to "csv".
         pretty: If True, indent JSON output. Only applies when fmt is "json". Defaults to False.
         limit: Maximum number of products to save. 0 means no limit. Defaults to 0.
+        use_rich: If True and Rich is installed, use pretty terminal output. Defaults to True.
     
     Returns:
         True if scraping and saving succeeded, False otherwise.
     """
     try:
         app = FirecrawlApp(api_key=api_key)
-        logger.info(f"🚀 Iniciando scraping de: {url}")
-        
-        # Usamos el formato JSON para obtener datos estructurados
-        try:
-            scrape_result = _scrape_with_retry(app, url)
-        except Exception as conn_err:
-            logger.error(f"❌ Error de conexión con FirecrawlApp: {conn_err}")
-            return False
+
+        if use_rich and RICH_AVAILABLE and console is not None:
+            console.print(Panel(f"[bold white]URL:[/] [cyan]{url}[/]", title="🚀 Firecrawl E-commerce Scraper", border_style="cyan", box=box.ROUNDED))
+            with Progress(SpinnerColumn(spinner_name="dots"), TextColumn("[cyan]Scrapeando...[/]"), transient=True) as progress:
+                progress.add_task("scraping", total=None)
+                try:
+                    scrape_result = _scrape_with_retry(app, url)
+                except Exception as conn_err:
+                    logger.error(f"❌ Error de conexión con FirecrawlApp: {conn_err}")
+                    return False
+        else:
+            logger.info(f"🚀 Iniciando scraping de: {url}")
+            try:
+                scrape_result = _scrape_with_retry(app, url)
+            except Exception as conn_err:
+                logger.error(f"❌ Error de conexión con FirecrawlApp: {conn_err}")
+                return False
         
         if not scrape_result or 'data' not in scrape_result:
             logger.error("❌ Error: No se pudieron obtener datos del sitio.")
@@ -248,7 +307,7 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
             logger.warning("⚠️ No se encontraron productos en los datos obtenidos. No se guardará ningún archivo.")
             return False
 
-        save_results(products, output_file, fmt, pretty, limit=limit)
+        save_results(products, output_file, fmt, pretty, limit=limit, use_rich=use_rich)
         return True
                 
     except Exception as e:
@@ -269,6 +328,8 @@ if __name__ == "__main__":
                         help="Número máximo de productos a guardar (0 = sin límite)")
     parser.add_argument("--quiet", action="store_true",
                         help="Suprimir mensajes INFO, solo mostrar advertencias y errores")
+    parser.add_argument("--no-rich", action="store_true",
+                        help="Desactivar salida formateada con Rich (usar texto plano)")
     parser.add_argument("--version", action="version",
                         version="firecrawl-ecom-scraper 1.0.0",
                         help="Mostrar la versión y salir")
@@ -276,10 +337,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.quiet:
         logger.setLevel(logging.WARNING)
-    # Infer format from file extension if --format is default "csv" and extension is .json
+    use_rich = not args.no_rich and not args.quiet
+    # Invert format from file extension if --format is default "csv" and extension is .json
     fmt = args.format if args.format != "csv" or not args.output.lower().endswith(".json") else "json"
     try:
-        success = scrape_ecommerce(args.url, args.key, args.output, fmt, args.pretty, limit=args.limit)
+        success = scrape_ecommerce(args.url, args.key, args.output, fmt, args.pretty, limit=args.limit, use_rich=use_rich)
         if not success:
             sys.exit(1)
     except KeyboardInterrupt:

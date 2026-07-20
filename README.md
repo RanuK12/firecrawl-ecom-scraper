@@ -12,6 +12,7 @@ A professional Python tool designed to extract structured product data from e-co
 - **Robust Scraping**: Powered by [Firecrawl](https://www.firecrawl.dev/) to bypass complex web structures.
 - **Smart Field Detection**: Automatically finds product arrays in nested JSON responses.
 - **European Price Parsing**: Handles both `.` and `,` decimal separators (e.g., `1.200,50` → `1200.50`).
+- **Rich Terminal Output**: Pretty-printed tables and summary panels via [Rich](https://github.com/Textualize/rich) (disable with `--no-rich`).
 - **Multiple Output Formats**: CSV and JSON (pretty-printed) export.
 - **Resilient**: Retry logic with exponential backoff via `tenacity`.
 
@@ -35,6 +36,12 @@ Custom output filename:
 
 ```bash
 python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --output "results.csv"
+```
+
+Disable rich terminal output for plain text:
+
+```bash
+python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --no-rich
 ```
 
 ## 🧪 Running Tests
