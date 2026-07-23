@@ -300,6 +300,9 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
             return False
 
         data = scrape_result['data']
+        if not isinstance(data, dict):
+            logger.error(f"❌ Error: Los datos obtenidos no tienen el formato esperado (dict), se recibió {type(data).__name__}.")
+            return False
         
         # Intentamos extraer campos comunes
         products: List[Dict[str, Any]] = _find_products(data)
@@ -339,7 +342,7 @@ if __name__ == "__main__":
         logger.setLevel(logging.WARNING)
     use_rich = not args.no_rich and not args.quiet
     # Invert format from file extension if --format is default "csv" and extension is .json
-    fmt = args.format if args.format != "csv" or not args.output.lower().endswith(".json") else "json"
+    fmt = _infer_format(args.output, args.format)
     try:
         success = scrape_ecommerce(args.url, args.key, args.output, fmt, args.pretty, limit=args.limit, use_rich=use_rich)
         if not success:

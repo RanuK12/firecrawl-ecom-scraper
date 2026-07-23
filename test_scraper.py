@@ -622,5 +622,34 @@ class TestScrapeEcommerceErrors(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
+    @patch('scraper.FirecrawlApp')
+    def test_data_not_dict_returns_false(self, mock_firecrawl_class):
+        """scrape_ecommerce returns False when data field is not a dict (e.g. string)."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {'data': 'error message'}
+
+        result = scrape_ecommerce(
+            url="https://example.com",
+            api_key="test-key",
+            output_file="test.csv"
+        )
+        self.assertFalse(result)
+
+    @patch('scraper.FirecrawlApp')
+    def test_data_none_returns_false(self, mock_firecrawl_class):
+        """scrape_ecommerce returns False when data field is None."""
+        mock_app = MagicMock()
+        mock_firecrawl_class.return_value = mock_app
+        mock_app.scrape_url.return_value = {'data': None}
+
+        result = scrape_ecommerce(
+            url="https://example.com",
+            api_key="test-key",
+            output_file="test.csv"
+        )
+        self.assertFalse(result)
+
+
 if __name__ == '__main__':
     unittest.main()
