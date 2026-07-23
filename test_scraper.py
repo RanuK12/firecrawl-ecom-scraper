@@ -622,7 +622,7 @@ class TestScrapeEcommerceErrors(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
-@patch('scraper.FirecrawlApp')
+    @patch('scraper.FirecrawlApp')
     def test_data_not_dict_returns_false(self, mock_firecrawl_class):
         """scrape_ecommerce returns False when data field is not a dict (e.g. string)."""
         mock_app = MagicMock()
