@@ -137,36 +137,114 @@ def save_results(products: List[Dict[str, Any]], output_file: str, fmt: str, pre
         logger.info(f"✅ Éxito: {len(products)} productos guardados en {output_file}")
 
 
+def _price_style(price_str: str) -> str:
+    """Return a Rich style string for a price based on its value."""
+    try:
+        val = float(price_str.replace(',', '.'))
+    except (ValueError, TypeError):
+        return "dim yellow"
+    if val > 100:
+        return "bold green"
+    return "green"
+
+def _stock_style(stock_str: str) -> str:
+    """Return a Rich style string for stock status: green=in stock, red=out, yellow=unknown."""
+    s = stock_str.lower().strip()
+    if not s or s in ('0', 'out of stock', 'agotado', 'sin stock', 'no disponible', 'unavailable', 'sold out'):
+        return "red"
+    if s in ('in stock', 'disponible', 'available', 'en stock', 'contact us', 'consultar', 'n/a'):
+        return "yellow"
+    # Numeric: >0 means in stock
+    try:
+        n = int(re.sub(r'[^\d]', '', s))
+        return "green" if n > 0 else "red"
+    except ValueError:
+        return "yellow"
+
 def _print_rich_output(products: List[Dict[str, Any]], output_file: str, fmt: str) -> None:
-    """Print a Rich table of products and a summary panel."""
+    """Print a Rich table of products and a summary panel with stats."""
+    from datetime import datetime
+
     # Table of first 10 products
-    table = Table(title="🛒 Productos Encontrados", box=box.ROUNDED, header_style="bold cyan", title_style="bold white")
+    table = Table(title="💰🛒 Productos Encontrados", box=box.ROUNDED,
+                  header_style="bold cyan", title_style="bold white",
+                  row_styles=["dim", ""])
     table.add_column("#", style="dim", width=4, justify="right")
-    table.add_column("Nombre", style="white", max_width=40, overflow="ellipsis")
-    table.add_column("Precio", style="green", justify="right", width=12)
-    table.add_column("Stock", style="yellow", width=12)
-    table.add_column("Descripción", style="dim", max_width=50, overflow="ellipsis")
+    table.add_column("Nombre", style="white", max_width=50, overflow="ellipsis")
+    table.add_column("Precio", justify="right", width=14)
+    table.add_column("Stock", width=14)
+    table.add_column("Descripción", style="dim", max_width=60, overflow="ellipsis")
 
     displayed = products[:10]
+    numeric_prices = []
+    in_stock_count = 0
+    out_stock_count = 0
+
     for i, product in enumerate(displayed, 1):
         fields = extract_product_fields(product) if isinstance(product, dict) else {'name': '', 'price': '', 'stock': '', 'description': ''}
+        price = fields.get('price', '')
+        stock = fields.get('stock', '')
+
+        # Track stats across ALL products (not just displayed)
+        pstyle = _price_style(price)
+        sstyle = _stock_style(stock)
         table.add_row(
             str(i),
-            fields.get('name', '')[:36],
-            fields.get('price', ''),
-            fields.get('stock', '')[:12],
-            fields.get('description', '')[:50],
+            fields.get('name', '')[:46],
+            f"[{pstyle}]{price}[/]",
+            f"[{sstyle}]{stock[:12]}[/]",
+            fields.get('description', '')[:56],
         )
+
+    # Stats across all products
+    for product in products:
+        fields = extract_product_fields(product) if isinstance(product, dict) else {'name': '', 'price': '', 'stock': '', 'description': ''}
+        price = fields.get('price', '')
+        stock = fields.get('stock', '')
+        try:
+            numeric_prices.append(float(price.replace(',', '.')))
+        except (ValueError, TypeError):
+            pass
+        s = stock.lower().strip()
+        if s and s not in ('0', 'out of stock', 'agotado', 'sin stock', 'no disponible', 'unavailable', 'sold out'):
+            try:
+                n = int(re.sub(r'[^\d]', '', s))
+                if n > 0:
+                    in_stock_count += 1
+                else:
+                    out_stock_count += 1
+            except ValueError:
+                in_stock_count += 1  # assume ambiguous = in stock
+        else:
+            out_stock_count += 1
 
     console.print(table)
 
-    # Summary panel
+    # Summary panel with stats
     total = len(products)
-    summary_text = f"[bold white]Archivo:[/] [cyan]{output_file}[/]\n[bold white]Formato:[/] [cyan]{fmt.upper()}[/]\n[bold white]Productos:[/] [green]{total}[/]"
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    summary_text = (
+        f"[bold white]Archivo:[/] [cyan]{output_file}[/]\n"
+        f"[bold white]Formato:[/] [cyan]{fmt.upper()}[/]\n"
+        f"[bold white]Productos:[/] [green]{total}[/]"
+    )
     if len(products) > 10:
         summary_text += f"\n[dim](mostrando primeros 10 de {total})[/]"
+    if numeric_prices:
+        avg_price = sum(numeric_prices) / len(numeric_prices)
+        min_price = min(numeric_prices)
+        max_price = max(numeric_prices)
+        summary_text += (
+            f"\n[bold white]Precio prom.:[/] [green]${avg_price:,.2f}[/]"
+            f"\n[bold white]Rango:[/] [dim]${min_price:,.2f}[/] – [bold green]${max_price:,.2f}[/]"
+        )
+    summary_text += (
+        f"\n[bold white]Con stock:[/] [green]{in_stock_count}[/]  "
+        f"[bold white]Sin stock:[/] [red]{out_stock_count}[/]"
+        f"\n\n[dim]⏱️  Scrapeado: {now}[/]"
+    )
 
-    console.print(Panel(summary_text, title="📦 Resumen", border_style="cyan", box=box.ROUNDED))
+    console.print(Panel(summary_text, title="📦 Resumen", border_style="cyan", box=box.HEAVY))
 
 def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Try multiple common keys to locate a list of product dicts.
@@ -279,8 +357,11 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
         app = FirecrawlApp(api_key=api_key)
 
         if use_rich and RICH_AVAILABLE and console is not None:
-            console.print(Panel(f"[bold white]URL:[/] [cyan]{url}[/]", title="🚀 Firecrawl E-commerce Scraper", border_style="cyan", box=box.ROUNDED))
-            with Progress(SpinnerColumn(spinner_name="dots"), TextColumn("[cyan]Scrapeando...[/]"), transient=True) as progress:
+            from datetime import datetime
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            header_text = f"[bold white]URL:[/] [cyan]{url}[/]\n[dim]v1.0.0 — {now}[/]"
+            console.print(Panel(header_text, title="🚀 Firecrawl E-commerce Scraper", border_style="cyan", box=box.HEAVY))
+            with Progress(SpinnerColumn(spinner_name="dots12"), TextColumn("[cyan]Scrapeando...[/]"), transient=True) as progress:
                 progress.add_task("scraping", total=None)
                 try:
                     scrape_result = _scrape_with_retry(app, url)
