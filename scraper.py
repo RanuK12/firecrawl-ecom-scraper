@@ -238,8 +238,33 @@ def _print_rich_output(products: List[Dict[str, Any]], output_file: str, fmt: st
             f"\n[bold white]Precio prom.:[/] [green]${avg_price:,.2f}[/]"
             f"\n[bold white]Rango:[/] [dim]${min_price:,.2f}[/] – [bold green]${max_price:,.2f}[/]"
         )
+        # Mini bar chart: top 5 most expensive products
+        if len(displayed) >= 2 and numeric_prices:
+            summary_text += "\n\n[bold white]Top precios:[/]"
+            # Build list of (name, price) from displayed, sort by price desc
+            priced_items = []
+            for product in displayed:
+                fields = extract_product_fields(product) if isinstance(product, dict) else {}
+                p = fields.get('price', '')
+                n = fields.get('name', '')
+                try:
+                    p_val = float(p.replace(',', '.'))
+                except (ValueError, TypeError):
+                    continue
+                priced_items.append((n, p_val))
+            priced_items.sort(key=lambda x: x[1], reverse=True)
+            top5 = priced_items[:5]
+            if top5:
+                max_p = top5[0][1]
+                bar_colors = ["bold green", "green", "yellow", "yellow", "dim yellow"]
+                for idx, (pname, pval) in enumerate(top5):
+                    name_trunc = pname[:20].ljust(20)
+                    bar_width = max(1, int((pval / max_p) * 30)) if max_p > 0 else 1
+                    bar = "█" * bar_width
+                    color = bar_colors[min(idx, len(bar_colors) - 1)]
+                    summary_text += f"\n  [dim]{name_trunc}[/] [bold ${color}]{bar}[/] [green]${pval:,.2f}[/]"
     summary_text += (
-        f"\n[bold white]Con stock:[/] [green]{in_stock_count}[/]  "
+        f"\n\n[bold white]Con stock:[/] [green]{in_stock_count}[/]  "
         f"[bold white]Sin stock:[/] [red]{out_stock_count}[/]"
         f"\n\n[dim]⏱️  Scrapeado: {now}[/]"
     )
@@ -359,7 +384,7 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
         if use_rich and RICH_AVAILABLE and console is not None:
             from datetime import datetime
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            header_text = f"[bold white]URL:[/] [cyan]{url}[/]\n[dim]v1.0.0 — {now}[/]"
+            header_text = f"[bold white]URL:[/] [cyan]{url}[/]\n[dim cyan]v1.2.0[/] [dim]— {now}[/]"
             console.print(Panel(header_text, title="🚀 Firecrawl E-commerce Scraper", border_style="cyan", box=box.HEAVY))
             with Progress(SpinnerColumn(spinner_name="dots12"), TextColumn("[cyan]Scrapeando...[/]"), transient=True) as progress:
                 progress.add_task("scraping", total=None)
