@@ -29,3 +29,8 @@ Thumbs.db
 *.csv
 *.json
 *.pyc
+
+# Coverage artifacts
+.coverage
+coverage.xml
+htmlcov/
