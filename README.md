@@ -28,20 +28,65 @@ Get your API key from [Firecrawl](https://www.firecrawl.dev/).
 
 ## 💻 Usage
 
+### Basic scraping
+
 ```bash
 python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY"
 ```
 
-Custom output filename:
+### Custom output filename (`--output`)
 
 ```bash
 python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --output "results.csv"
 ```
 
-Disable rich terminal output for plain text:
+### Choose output format (`--format`)
+
+Export as CSV (default) or JSON:
+
+```bash
+python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --format csv
+python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --format json
+```
+
+### Pretty-print JSON (`--pretty`)
+
+Indent JSON output for readability (only applies with `--format json`):
+
+```bash
+python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --format json --pretty
+```
+
+### Limit products (`--limit`)
+
+Cap the number of products saved (0 = no limit, default):
+
+```bash
+python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --limit 50
+```
+
+### Quiet mode (`--quiet`)
+
+Suppress INFO messages, only show warnings and errors:
+
+```bash
+python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --quiet
+```
+
+### Disable Rich output (`--no-rich`)
+
+Use plain text instead of Rich-formatted tables and panels:
 
 ```bash
 python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --no-rich
+```
+
+### Show version (`--version`)
+
+Print the current version and exit:
+
+```bash
+python scraper.py --version
 ```
 
 ## 🧪 Running Tests
