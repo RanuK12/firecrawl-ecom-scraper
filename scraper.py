@@ -6,6 +6,7 @@ import sys
 import re
 import os
 import requests
+from pathlib import Path
 from typing import List, Dict, Any
 from typing_extensions import TypedDict
 from firecrawl import FirecrawlApp
@@ -113,35 +114,49 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
         'description': description,
     }
 
-def save_results(products: List[Dict[str, Any]], output_file: str, fmt: str, pretty: bool, limit: int = 0, use_rich: bool = True) -> None:
+def save_results(products: List[Dict[str, Any]], output_file: str, fmt: str, pretty: bool, limit: int = 0, use_rich: bool = True) -> bool:
     """Write products to output_file in CSV or JSON format.
-    If limit > 0, only the first `limit` products are saved."""
+    If limit > 0, only the first `limit` products are saved.
+    Creates parent directory if it doesn't exist.
+    Returns True on success, False on error."""
+    try:
+        # Create parent directory if it doesn't exist
+        Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        logger.error(f"❌ No se pudo crear el directorio para {output_file}: {e}")
+        return False
+
     if limit > 0:
         products = products[:limit]
-    if fmt == "csv":
-        fieldnames = ['name', 'price', 'stock', 'description']
-        with open(output_file, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
-            writer.writeheader()
-            for product in products:
-                if not isinstance(product, dict):
-                    logger.warning(f"⚠️ Elemento no es un diccionario, se omite: {product}")
-                    continue
-                writer.writerow(extract_product_fields(product))
-    elif fmt == "json":
-        # Extract fields for each product
-        extracted = [extract_product_fields(p) if isinstance(p, dict) else {} for p in products]
-        indent = 2 if pretty else None
-        with open(output_file, mode='w', encoding='utf-8') as file:
-            json.dump(extracted, file, indent=indent, ensure_ascii=False)
-    else:
-        raise ValueError(f"Formato no soportado: {fmt}")
+    try:
+        if fmt == "csv":
+            fieldnames = ['name', 'price', 'stock', 'description']
+            with open(output_file, mode='w', newline='', encoding='utf-8') as file:
+                writer = csv.DictWriter(file, fieldnames=fieldnames)
+                writer.writeheader()
+                for product in products:
+                    if not isinstance(product, dict):
+                        logger.warning(f"⚠️ Elemento no es un diccionario, se omite: {product}")
+                        continue
+                    writer.writerow(extract_product_fields(product))
+        elif fmt == "json":
+            # Extract fields for each product
+            extracted = [extract_product_fields(p) if isinstance(p, dict) else {} for p in products]
+            indent = 2 if pretty else None
+            with open(output_file, mode='w', encoding='utf-8') as file:
+                json.dump(extracted, file, indent=indent, ensure_ascii=False)
+        else:
+            raise ValueError(f"Formato no soportado: {fmt}")
+    except (OSError, IOError) as e:
+        logger.error(f"❌ Error guardando {output_file}: {e}")
+        return False
 
     # Rich terminal output
     if use_rich and RICH_AVAILABLE and console is not None:
         _print_rich_output(products, output_file, fmt)
     else:
         logger.info(f"✅ Éxito: {len(products)} productos guardados en {output_file}")
+    return True
 
 
 def _price_style(price_str: str) -> str:

@@ -426,6 +426,44 @@ class TestFindAndSaveProducts(unittest.TestCase):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
 
+    def test_save_results_creates_missing_directory(self):
+        '''save_results creates parent directory if it does not exist.'''
+        from scraper import save_results
+        products = [{'name': 'Test', 'price': '10', 'stock': '1', 'description': 'desc'}]
+        import tempfile
+        import os
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = os.path.join(tmpdir, 'subdir', 'output.csv')
+            # subdir does not exist yet
+            result = save_results(products, output_path, fmt='csv', pretty=False)
+            self.assertTrue(result)
+            self.assertTrue(os.path.exists(output_path))
+            with open(output_path, newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0]['name'], 'Test')
+
+    def test_save_results_returns_false_on_permission_error(self):
+        '''save_results returns False and logs error when write fails (permission denied).'''
+        from scraper import save_results
+        products = [{'name': 'Test', 'price': '10', 'stock': '1', 'description': 'desc'}]
+        # Try to write to a directory without write permission (root-owned)
+        # We'll use /root which typically requires sudo
+        # Skip this test if we're root (unlikely in CI)
+        import os
+        if os.getuid() == 0:
+            self.skipTest("Running as root, permission test not applicable")
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Create a read-only directory
+            readonly_dir = os.path.join(tmpdir, 'readonly')
+            os.makedirs(readonly_dir, mode=0o555)
+            output_path = os.path.join(readonly_dir, 'output.csv')
+            result = save_results(products, output_path, fmt='csv', pretty=False)
+            self.assertFalse(result)
+            self.assertFalse(os.path.exists(output_path))
+
     def test_price_dash_only(self):
         """Price with just a dash should return empty string."""
         product = {
