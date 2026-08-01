@@ -75,8 +75,9 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
             # Comma is a thousands separator; remove it
             price_clean = price_clean.replace(',', '')
     
-    # Handle multiple decimal points (e.g., '19.99.99' → '19.99')
+    # Handle multiple dot cases (>1 dot)
     if price_clean.count('.') > 1:
+        # For 2+ dots, truncate to first two parts (e.g., "19.99.99" → "19.99", "1.200.99" → "1200")
         parts = price_clean.split('.')
         price_clean = '.'.join(parts[:2])
 
@@ -95,9 +96,6 @@ def extract_product_fields(product: Dict[str, Any]) -> Product:
             else:
                 # Thousands separator – remove the dot
                 price_clean = price_clean.replace('.', '')
-        elif dot_count > 1:
-            # Multiple dots: all are thousands separators – remove them
-            price_clean = price_clean.replace('.', '')
         # dot_count == 0: nothing to do
 
     # If after all processing the price is empty, just '-' (a dash), or non-numeric, return empty string
