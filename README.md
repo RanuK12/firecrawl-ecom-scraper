@@ -1,146 +1,122 @@
-# Firecrawl E-commerce Scraper 🛒
+# Firecrawl E-commerce Scraper
 
-[![CI](https://github.com/RanuK12/firecrawl-ecom-scraper/actions/workflows/ci.yml/badge.svg)](https://github.com/RanuK12/firecrawl-ecom-scraper/actions/workflows/ci.yml)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+A powerful e-commerce scraper built with Firecrawl that extracts product information from online stores and exports it to CSV or JSON format.
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Dependabot](https://img.shields.io/badge/dependabot-enabled-025e8c.svg)](https://github.com/RanuK12/firecrawl-ecom-scraper/network/dependencies)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 
-A professional Python tool designed to extract structured product data from e-commerce websites using the **Firecrawl SDK**. Handles complex web structures and exports clean, structured data directly to CSV or JSON.
+## 🚀 Quick Start
 
-## 🚀 Quick Start (2 minutes setup)
+Get the scraper running in under 2 minutes!
 
-Get the scraper running in under 2 minutes:
+### Step 1: Clone & Setup
 
 ```bash
-# 1. Clone the repository
+# Clone the repository
 git clone https://github.com/RanuK12/firecrawl-ecom-scraper.git
 cd firecrawl-ecom-scraper
 
-# 2. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 3. Set up your API key
+# Set up your API key
 cp .env.example .env
-# Edit .env and add your Firecrawl API key: FIRECRAWL_API_KEY=your_key_here
-
-# 4. Run the scraper on an e-commerce site
-python scraper.py --url "https://example-ecommerce-store.com" --key "your_firecrawl_api_key"
+# Edit .env and add: FIRECRAWL_API_KEY=your_actual_firecrawl_api_key_here
 ```
 
-See the `sample_products.csv` file to see what the output looks like!
-
-## 🚀 Features
-
-- **Robust Scraping**: Powered by [Firecrawl](https://www.firecrawl.dev/) to bypass complex web structures.
-- **Smart Field Detection**: Automatically finds product arrays in nested JSON responses.
-- **European Price Parsing**: Handles both `.` and `,` decimal separators (e.g., `1.200,50` → `1200.50`).
-- **Rich Terminal Output**: Pretty-printed tables and summary panels via [Rich](https://github.com/Textualize/rich) (disable with `--no-rich`).
-- **Multiple Output Formats**: CSV and JSON (pretty-printed) export.
-- **Resilient**: Retry logic with exponential backoff via `tenacity`.
-
-## 🛠️ Detailed Setup
-
-### Prerequisites
-- Python 3.10 or higher
-- Firecrawl API key (get one from [Firecrawl](https://www.firecrawl.dev/))
-
-### Installation
+### Step 2: Run the Scraper
 
 ```bash
-git clone https://github.com/RanuK12/firecrawl-ecom-scraper.git
-cd firecrawl-ecom-scraper
-pip install -r requirements.txt
+# Run on an e-commerce site
+python3 scraper.py --url "https://example-ecommerce-store.com" --key "your_firecrawl_api_key"
 ```
 
-### Environment Configuration
+### Step 3: Check the Results
 
-1. Copy the example environment file:
-   ```bash
-   cp .env.example .env
-   ```
+The scraper creates a CSV file with product data:
+- `name`: Product name
+- `price`: Price (cleaned of currency symbols)
+- `stock`: Stock information
+- `description`: Product description
 
-2. Edit `.env` and add your Firecrawl API key:
-   ```
-   FIRECRAWL_API_KEY=your_actual_firecrawl_api_key_here
-   ```
+## 📋 Sample Output
 
-3. The `sample_products.csv` file shows what the output looks like when the scraper runs successfully.
+See `sample_products.csv` for an example of the output format:
 
-## 💻 Usage
+```csv
+name,price,stock,description
+"Wireless Headphones","99.99","25","High-quality wireless headphones with noise cancellation"
+"Smartphone","599.99","15","Latest smartphone with advanced camera system"
+"Laptop","1299.99","8","Powerful laptop for professionals and gamers"
+```
 
-### Basic scraping
+## 🎯 Features
+
+- ✅ **Fast Setup**: Running in under 2 minutes
+- ✅ **Multiple Output Formats**: CSV or JSON
+- ✅ **Clean Data**: Automatically removes currency symbols and handles European decimal commas
+- ✅ **Error Handling**: Robust error handling with retry logic
+- ✅ **Progress Tracking**: Beautiful terminal progress (with Rich)
+- ✅ **Flexible Output**: Custom output filenames and formats
+
+## 📁 Project Structure
+
+```
+firecrawl-ecom-scraper/
+├── scraper.py          # Main scraper script
+├── requirements.txt    # Python dependencies
+├── .env.example        # Environment variables template
+├── sample_products.csv # Sample output file
+└── README.md           # This file
+```
+
+## 🚀 Usage Examples
+
+### Basic Usage
 
 ```bash
-python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY"
+# Run on a simple e-commerce site
+python3 scraper.py --url "https://example-ecommerce-store.com" --key "your_firecrawl_api_key"
 ```
 
-### Custom output filename (`--output`)
+### Save to Custom File
 
 ```bash
-python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --output "results.csv"
+# Save results to a specific filename
+python3 scraper.py --url "https://example-store.com" --key "your_api_key" --output "my_products.csv"
 ```
 
-### Choose output format (`--format`)
-
-Export as CSV (default) or JSON:
+### Export as JSON
 
 ```bash
-python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --format csv
-python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --format json
+# Export results in JSON format
+python3 scraper.py --url "https://example-store.com" --key "your_api_key" --format json
 ```
 
-### Pretty-print JSON (`--pretty`)
-
-Indent JSON output for readability (only applies with `--format json`):
+### Limit Results
 
 ```bash
-python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --format json --pretty
+# Only save the first 20 products
+python3 scraper.py --url "https://example-store.com" --key "your_api_key" --limit 20
 ```
 
-### Limit products (`--limit`)
+## 🔧 Requirements
 
-Cap the number of products saved (0 = no limit, default):
+- Python 3.7+
+- Firecrawl API key (get one at [https://www.firecrawl.dev/](https://www.firecrawl.dev/))
 
-```bash
-python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --limit 50
-```
+## 📝 License
 
-### Quiet mode (`--quiet`)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Suppress INFO messages, only show warnings and errors:
+## 🤝 Contributing
 
-```bash
-python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --quiet
-```
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Disable Rich output (`--no-rich`)
+## 📞 Support
 
-Use plain text instead of Rich-formatted tables and panels:
-
-```bash
-python scraper.py --url "https://example-ecommerce-store.com" --key "YOUR_API_KEY" --no-rich
-```
-
-### Show version (`--version`)
-
-Print the current version and exit:
-
-```bash
-python scraper.py --version
-```
-
-## 🧪 Running Tests
-
-```bash
-python -m unittest test_scraper.py -v
-```
-
-The test suite covers field extraction, price parsing with European locales, product detection in nested JSON, and output formatting — all without requiring a Firecrawl API key.
-
-## 📁 Output
-
-The scraper produces a CSV file with columns: `name`, `price`, `stock`, `description`. Each product found on the page becomes a row.
-
-## 📄 License
-
-MIT
+If you encounter any issues or have questions, please open an issue on GitHub.
