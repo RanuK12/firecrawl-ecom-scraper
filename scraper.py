@@ -352,7 +352,7 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
            retry_if_exception(lambda e: isinstance(e, requests.exceptions.HTTPError) and e.response.status_code == 429))
 )
 def _scrape_with_retry(app, url):
-    return app.scrape_url(url, params={'formats': ['json']})
+    return app.scrape_url(url)
 
 def _infer_format(output_file: str, explicit_fmt: str | None = None) -> str:
     """Infer output format from file extension. explicit_fmt (if not None) takes priority."""
