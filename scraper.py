@@ -428,7 +428,8 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
         logger.error(f"💥 Error inesperado durante el scraping: {e}")
         return False
 
-if __name__ == "__main__":
+def main() -> int:
+    """Entry point for the Firecrawl E-commerce Scraper CLI."""
     parser = argparse.ArgumentParser(description="Firecrawl E-commerce Scraper")
     parser.add_argument("--url", required=True, help="URL de la tienda")
     parser.add_argument("--key", default=None, help="Firecrawl API Key (defaults to FIRECRAWL_API_KEY env var)")
@@ -447,22 +448,27 @@ if __name__ == "__main__":
     parser.add_argument("--version", action="version",
                         version="firecrawl-ecom-scraper 1.0.0",
                         help="Mostrar la versión y salir")
-    
+
     args = parser.parse_args()
     if args.quiet:
         logger.setLevel(logging.WARNING)
     use_rich = not args.no_rich and not args.quiet
-    # Invert format from file extension if --format is default "csv" and extension is .json
+    # Invert format args from file extension if --format is default "csv" and extension is .json
     fmt = _infer_format(args.output, args.format)
     # Resolve API key: prefer CLI arg, fallback to env var
     api_key = args.key or os.getenv('FIRECRAWL_API_KEY')
     if not api_key:
         logger.error("Firecrawl API key not provided. Use --key or set FIRECRAWL_API_KEY in .env.")
-        sys.exit(1)
+        return 1
     try:
         success = scrape_ecommerce(args.url, api_key, args.output, fmt, args.pretty, limit=args.limit, use_rich=use_rich)
         if not success:
-            sys.exit(1)
+            return 1
+        return 0
     except KeyboardInterrupt:
         print("\n⏹️  Scraping interrumpido por el usuario.")
-        sys.exit(130)
+        return 130
+
+
+if __name__ == "__main__":
+    sys.exit(main())

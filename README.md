@@ -39,6 +39,16 @@ The scraper creates a CSV file with product data:
 - `stock`: Stock information
 - `description`: Product description
 
+## 📦 Install as CLI
+
+```bash
+# Install the scraper as a command-line tool
+pip install .
+
+# Now you can run it from anywhere:
+firecrawl-scraper --url "https://example-store.com" --key "your_api_key"
+```
+
 ## 📋 Sample Output
 
 See `sample_products.csv` for an example of the output format:

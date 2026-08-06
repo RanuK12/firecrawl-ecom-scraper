@@ -17,6 +17,14 @@ cp .env.example .env
 # Edit .env and add: FIRECRAWL_API_KEY=your_actual_firecrawl_api_key_here
 ```
 
+### 💡 Optional: Install as CLI tool
+
+```bash
+pip install .
+# Then run from anywhere:
+firecrawl-scraper --url "https://example-store.com" --key "your_api_key"
+```
+
 ## 🚀 Step 2: Run the Scraper
 
 ```bash
