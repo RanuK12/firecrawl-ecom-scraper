@@ -5,7 +5,7 @@ A powerful e-commerce scraper built with Firecrawl that extracts product informa
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 
-## 🚀 Quick Start
+## 🚀 Quick Start (2 min)
 
 Get the scraper running in under 2 minutes!
 
@@ -21,14 +21,17 @@ pip install -r requirements.txt
 
 # Set up your API key
 cp .env.example .env
-# Edit .env and add: FIRECRAWL_API_KEY=your_actual_firecrawl_api_key_here
+# Edit .env and add your Firecrawl API key: FIRECRAWL_API_KEY=your_actual_firecrawl_api_key_here
 ```
 
 ### Step 2: Run the Scraper
 
 ```bash
-# Run on an e-commerce site
-python3 scraper.py --url "https://example-ecommerce-store.com" --key "your_firecrawl_api_key"
+# See available options
+python3 scraper.py --help
+
+# Run on a sample e-commerce site (example)
+python3 scraper.py --url "https://example-ecommerce-store.com"
 ```
 
 ### Step 3: Check the Results
@@ -38,6 +41,8 @@ The scraper creates a CSV file with product data:
 - `price`: Price (cleaned of currency symbols)
 - `stock`: Stock information
 - `description`: Product description
+
+📄 **Sample Output**: See [`sample_products.csv`](sample_products.csv) for a real example of the output format.
 
 ## 📦 Install as CLI
 
