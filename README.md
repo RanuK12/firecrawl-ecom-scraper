@@ -42,7 +42,7 @@ The scraper creates a CSV file with product data:
 - `stock`: Stock information
 - `description`: Product description
 
-📄 **Sample Output**: See [`sample_products.csv`](sample_products.csv) for a real example of the output format.
+📄 **Sample Output**: See [`sample_products.csv`](sample_products.csv) *(datos de ejemplo, no scrapeados)* for a real example of the output format.
 
 ## 📦 Install as CLI
 
