@@ -12,14 +12,9 @@ Get the scraper running in under 2 minutes!
 ### Step 1: Clone & Setup
 
 ```bash
-# Clone the repository
 git clone https://github.com/RanuK12/firecrawl-ecom-scraper.git
 cd firecrawl-ecom-scraper
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Set up your API key
 cp .env.example .env
 # Edit .env and add: FIRECRAWL_API_KEY=your_actual_firecrawl_api_key_here
 ```
@@ -27,37 +22,29 @@ cp .env.example .env
 ### Step 2: Run the Scraper
 
 ```bash
-# Run on an e-commerce site
-python3 scraper.py --url "https://example-ecommerce-store.com" --key "your_firecrawl_api_key"
+python3 scraper.py --url "https://example-ecommerce-store.com"
 ```
 
 ### Step 3: Check the Results
 
-The scraper creates a CSV file with product data:
-- `name`: Product name
-- `price`: Price (cleaned of currency symbols)
-- `stock`: Stock information
-- `description`: Product description
+The scraper creates a CSV file with product data (first 5 rows shown):
+
+```csv
+url,title,price,currency,availability,description,images,sku,category,brand,rating,review_count
+https://example-store.com/product/1,"Wireless Headphones Pro",149.99,USD,In Stock,"Premium wireless headphones with active noise cancellation and 30-hour battery life",https://example-store.com/images/headphones-pro.jpg,WH-PRO-001,Electronics,SoundMax,4.5,1234
+https://example-store.com/product/2,"Smart Watch Series 5",299.00,USD,In Stock,"Latest smartwatch with health monitoring, GPS, and cellular connectivity",https://example-store.com/images/smartwatch-5.jpg,SW-5-002,Wearables,TechWear,4.7,892
+https://example-store.com/product/3,"USB-C Hub 7-in-1",49.99,USD,In Stock,"Multi-port adapter with HDMI, USB-A, USB-C, SD card reader, and Ethernet",https://example-store.com/images/usb-hub.jpg,USB-HUB-7,Accessories,ConnectPro,4.3,567
+https://example-store.com/product/4,"Mechanical Keyboard RGB",129.99,USD,Out of Stock,"RGB mechanical keyboard with hot-swappable switches and PBT keycaps",https://example-store.com/images/kb-rgb.jpg,MK-RGB-003,Electronics,KeyMaster,4.6,2103
+https://example-store.com/product/5,"Portable SSD 2TB",189.99,USD,In Stock,"High-speed portable SSD with USB 3.2 Gen 2x2 and hardware encryption",https://example-store.com/images/ssd-2tb.jpg,SSD-2TB-004,Storage,DataVault,4.8,1456
+```
+
+Full sample: [`examples/sample_output.csv`](examples/sample_output.csv) (15 rows)
 
 ## 📦 Install as CLI
 
 ```bash
-# Install the scraper as a command-line tool
 pip install .
-
-# Now you can run it from anywhere:
-firecrawl-scraper --url "https://example-store.com" --key "your_api_key"
-```
-
-## 📋 Sample Output
-
-See `sample_products.csv` for an example of the output format:
-
-```csv
-name,price,stock,description
-"Wireless Headphones","99.99","25","High-quality wireless headphones with noise cancellation"
-"Smartphone","599.99","15","Latest smartphone with advanced camera system"
-"Laptop","1299.99","8","Powerful laptop for professionals and gamers"
+firecrawl-scraper --url "https://example-store.com"
 ```
 
 ## 🎯 Features
@@ -76,7 +63,8 @@ firecrawl-ecom-scraper/
 ├── scraper.py          # Main scraper script
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # Environment variables template
-├── sample_products.csv # Sample output file
+├── examples/
+│   └── sample_output.csv  # Sample output file (15 rows)
 └── README.md           # This file
 ```
 
@@ -85,29 +73,25 @@ firecrawl-ecom-scraper/
 ### Basic Usage
 
 ```bash
-# Run on a simple e-commerce site
-python3 scraper.py --url "https://example-ecommerce-store.com" --key "your_firecrawl_api_key"
+python3 scraper.py --url "https://example-ecommerce-store.com"
 ```
 
 ### Save to Custom File
 
 ```bash
-# Save results to a specific filename
-python3 scraper.py --url "https://example-store.com" --key "your_api_key" --output "my_products.csv"
+python3 scraper.py --url "https://example-store.com" --output "my_products.csv"
 ```
 
 ### Export as JSON
 
 ```bash
-# Export results in JSON format
-python3 scraper.py --url "https://example-store.com" --key "your_api_key" --format json
+python3 scraper.py --url "https://example-store.com" --format json
 ```
 
 ### Limit Results
 
 ```bash
-# Only save the first 20 products
-python3 scraper.py --url "https://example-store.com" --key "your_api_key" --limit 20
+python3 scraper.py --url "https://example-store.com" --limit 20
 ```
 
 ## 🔧 Requirements
