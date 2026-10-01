@@ -1,0 +1,66 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.0.3, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.14/bin/python3.14
+cachedir: .pytest_cache
+rootdir: /Users/emilioranucoli/.ranukita/projects/firecrawl-ecom-scraper
+configfile: pyproject.toml
+plugins: cov-7.1.0, anyio-4.13.0
+collecting ... collected 50 items
+
+test_scraper.py::TestExtractProductFields::test_all_fields_present PASSED [  2%]
+test_scraper.py::TestExtractProductFields::test_empty_dict PASSED        [  4%]
+test_scraper.py::TestExtractProductFields::test_european_decimal_comma PASSED [  6%]
+test_scraper.py::TestExtractProductFields::test_european_price_formats PASSED [  8%]
+test_scraper.py::TestExtractProductFields::test_missing_description PASSED [ 10%]
+test_scraper.py::TestExtractProductFields::test_missing_name PASSED      [ 12%]
+test_scraper.py::TestExtractProductFields::test_missing_price PASSED     [ 14%]
+test_scraper.py::TestExtractProductFields::test_missing_stock PASSED     [ 16%]
+test_scraper.py::TestExtractProductFields::test_multiple_decimal_points PASSED [ 18%]
+test_scraper.py::TestExtractProductFields::test_negative_price_with_comma PASSED [ 20%]
+test_scraper.py::TestExtractProductFields::test_price_comma PASSED       [ 22%]
+test_scraper.py::TestExtractProductFields::test_price_many_dots_truncation PASSED [ 24%]
+test_scraper.py::TestExtractProductFields::test_price_multiple_dots_thousands_separators PASSED [ 26%]
+test_scraper.py::TestExtractProductFields::test_price_single_dot_thousands PASSED [ 28%]
+test_scraper.py::TestExtractProductFields::test_price_with_currency_symbols PASSED [ 30%]
+test_scraper.py::TestExtractProductFields::test_price_with_only_thousands_separator PASSED [ 32%]
+test_scraper.py::TestExtractProductFields::test_special_characters_and_currency PASSED [ 34%]
+test_scraper.py::TestFindAndSaveProducts::test_find_products_deep_nested PASSED [ 36%]
+test_scraper.py::TestFindAndSaveProducts::test_find_products_flat_keys PASSED [ 38%]
+test_scraper.py::TestFindAndSaveProducts::test_find_products_prefers_product_lists PASSED [ 40%]
+test_scraper.py::TestFindAndSaveProducts::test_find_products_returns_empty PASSED [ 42%]
+test_scraper.py::TestFindAndSaveProducts::test_find_products_with_edges PASSED [ 44%]
+test_scraper.py::TestFindAndSaveProducts::test_looks_like_product_false PASSED [ 46%]
+test_scraper.py::TestFindAndSaveProducts::test_looks_like_product_true PASSED [ 48%]
+test_scraper.py::TestFindAndSaveProducts::test_price_contact_us PASSED   [ 50%]
+test_scraper.py::TestFindAndSaveProducts::test_price_dash_only PASSED    [ 52%]
+test_scraper.py::TestFindAndSaveProducts::test_price_non_numeric PASSED  [ 54%]
+test_scraper.py::TestFindAndSaveProducts::test_save_results_csv PASSED   [ 56%]
+test_scraper.py::TestFindAndSaveProducts::test_save_results_csv_no_rich PASSED [ 58%]
+test_scraper.py::TestFindAndSaveProducts::test_save_results_empty PASSED [ 60%]
+test_scraper.py::TestFindAndSaveProducts::test_save_results_invalid_format PASSED [ 62%]
+test_scraper.py::TestFindAndSaveProducts::test_save_results_json PASSED  [ 64%]
+test_scraper.py::TestFindAndSaveProducts::test_save_results_json_pretty PASSED [ 66%]
+test_scraper.py::TestFindAndSaveProducts::test_save_results_limit PASSED [ 68%]
+test_scraper.py::TestFindAndSaveProducts::test_save_results_non_dict PASSED [ 70%]
+test_scraper.py::TestInferFormat::test_csv_extension PASSED              [ 72%]
+test_scraper.py::TestInferFormat::test_explicit_fmt_priority PASSED      [ 74%]
+test_scraper.py::TestInferFormat::test_json_extension PASSED             [ 76%]
+test_scraper.py::TestInferFormat::test_no_extension_defaults_csv PASSED  [ 78%]
+test_scraper.py::TestInferFormat::test_unknown_extension_defaults_csv PASSED [ 80%]
+test_scraper.py::TestScrapeEcommerceErrors::test_connection_error_returns_false PASSED [ 82%]
+test_scraper.py::TestScrapeEcommerceErrors::test_data_none_returns_false PASSED [ 84%]
+test_scraper.py::TestScrapeEcommerceErrors::test_data_not_dict_returns_false PASSED [ 86%]
+test_scraper.py::TestScrapeEcommerceErrors::test_empty_data_returns_false PASSED [ 88%]
+test_scraper.py::TestScrapeEcommerceErrors::test_no_data_returns_false PASSED [ 90%]
+test_scraper.py::TestScrapeEcommerceErrors::test_no_products_found_returns_false PASSED [ 92%]
+test_scraper.py::TestScrapeEcommerceErrors::test_rate_limit_429_returns_false PASSED [ 94%]
+test_scraper.py::TestScrapeEcommerceErrors::test_success_with_valid_products PASSED [ 96%]
+test_scraper.py::TestScrapeEcommerceErrors::test_timeout_error_returns_false PASSED [ 98%]
+test_scraper.py::TestScrapeEcommerceErrors::test_unexpected_exception_returns_false PASSED [100%]
+
+=============================== warnings summary ===============================
+../../../../../opt/homebrew/lib/python3.14/site-packages/requests/__init__.py:113
+  /opt/homebrew/lib/python3.14/site-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.4.3)/charset_normalizer (3.4.7) doesn't match a supported version!
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 50 passed, 1 warning in 14.69s ========================
