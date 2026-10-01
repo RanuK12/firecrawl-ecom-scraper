@@ -24,9 +24,9 @@ The command creates `output.csv` with columns `id,name,price,url`.
 ## Sample output
 
 ```csv
-product_name,price,url
-"Sample Shirt",19.99,"https://example.com/product/1"
-"Sample Shoes",49.99,"https://example.com/product/2"
+id,name,price,url
+1,Wireless Headphones,89.99,https://example-store.com/wireless-headphones
+2,Smart Watch,149.50,https://example-store.com/smart-watch
 ```
 
 ---
