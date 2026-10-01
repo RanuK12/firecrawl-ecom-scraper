@@ -19,7 +19,7 @@ cp .env.example .env   # edit with your Firecrawl API key and target URL
 python -m scraper   # produces output.csv
 ```
 
-The command creates `output.csv` with columns `product_name,price,url`.
+The command creates `output.csv` with columns `id,name,price,url`.
 
 ## Sample output
 
