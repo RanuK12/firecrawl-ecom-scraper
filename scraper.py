@@ -448,6 +448,8 @@ def main() -> int:
     parser.add_argument("--version", action="version",
                         version="firecrawl-ecom-scraper 1.0.0",
                         help="Mostrar la versión y salir")
+    parser.add_argument("--demo", action="store_true",
+                        help="Run in demo mode with mock data (no API key required)")
 
     args = parser.parse_args()
     if args.quiet:
@@ -455,7 +457,21 @@ def main() -> int:
     use_rich = not args.no_rich and not args.quiet
     # Invert format args from file extension if --format is default "csv" and extension is .json
     fmt = _infer_format(args.output, args.format)
-    # Resolve API key: prefer CLI arg, fallback to env var
+    
+    # Demo mode: generate mock data and skip API call
+    if args.demo:
+        mock_products = [
+            {"name": "Sample Shirt", "price": 19.99, "stock": 100, "description": "A comfortable cotton shirt"},
+            {"name": "Sample Shoes", "price": 49.99, "stock": 50, "description": "Durable running shoes"}
+        ]
+        try:
+            save_results(mock_products, args.output, fmt, args.pretty, limit=args.limit, use_rich=use_rich)
+            return 0
+        except Exception as e:
+            logger.error(f"Error in demo mode: {e}")
+            return 1
+    
+    # Normal mode: require API key
     api_key = args.key or os.getenv('FIRECRAWL_API_KEY')
     if not api_key:
         logger.error("Firecrawl API key not provided. Use --key or set FIRECRAWL_API_KEY in .env.")

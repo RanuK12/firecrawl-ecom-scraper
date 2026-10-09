@@ -19,14 +19,29 @@ cp .env.example .env   # edit with your Firecrawl API key and target URL
 python -m scraper   # produces output.csv
 ```
 
-The command creates `output.csv` with columns `product_name,price,url`.
+## Demo mode (no API key needed)
+
+```bash
+python -m scraper --demo --output demo_output.csv
+```
+
+This generates a sample CSV with mock data so you can verify the script works before obtaining a Firecrawl API key.
+
+## Output format
+
+The scraper creates `output.csv` (or the file you specify) with columns:
+
+- `name` – product name
+- `price` – price as a number
+- `stock` – available stock (integer)
+- `description` – short product description
 
 ## Sample output
 
 ```csv
-product_name,price,url
-"Sample Shirt",19.99,"https://example.com/product/1"
-"Sample Shoes",49.99,"https://example.com/product/2"
+name,price,stock,description
+Sample Shirt,19.99,100,A comfortable cotton shirt
+Sample Shoes,49.99,50,Durable running shoes
 ```
 
 ---
