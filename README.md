@@ -1,49 +1,53 @@
-# firecrawl‑ecom‑scraper
+# firecrawl-ecom-scraper
 
-A quick scraper for e‑commerce sites using **Firecrawl**.
+A quick scraper for e-commerce sites using **Firecrawl**.
 
-## Quick start (≈2 min)
+## Quick start
 
-```bash
-# 1️⃣ Clone & enter repo
-git clone https://github.com/RanuK12/firecrawl-ecom-scraper.git && cd firecrawl-ecom-scraper
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/RanuK12/firecrawl-ecom-scraper.git && cd firecrawl-ecom-scraper
+   ```
 
-# 2️⃣ Install deps (Python 3.10+)
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+2. Configura tu clave API de Firecrawl:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edita `.env` y agrega tu clave API y la URL del sitio:
+   ```
+   FIRECRAWL_API_KEY=your_api_key_here
+   TARGET_URL=https://webscraper.io/test-sites/e-commerce/static
+   OUTPUT_CSV=output.csv
+   ```
 
-# 3️⃣ Prepare env vars
-cp .env.example .env   # edit with your Firecrawl API key and target URL
+3. Ejecuta el ejemplo:
+   ```bash
+   python3 example_run.py
+   ```
+   
+   El CSV de muestra se encontrará en `sample_output.csv`.
 
-# 4️⃣ Run scraper
-python -m scraper   # produces output.csv
-```
+## Demo mode
 
-## Demo mode (no API key needed)
-
-```bash
-python -m scraper --demo --output demo_output.csv
-```
-
-This generates a sample CSV with mock data so you can verify the script works before obtaining a Firecrawl API key.
+Para probar el scraper sin necesidad de una clave API:
+   ```bash
+   python3 -m scraper --demo --output demo_output.csv
+   ```
 
 ## Output format
 
-The scraper creates `output.csv` (or the file you specify) with columns:
-
-- `name` – product name
-- `price` – price as a number
-- `stock` – available stock (integer)
-- `description` – short product description
+El scraper genera un archivo CSV con las siguientes columnas:
+- `product_id` – Identificador del producto
+- `title` – Nombre del producto
+- `price` – Precio del producto
+- `stock` – Stock disponible
+- `url` – Enlace al producto
 
 ## Sample output
 
 ```csv
-name,price,stock,description
-Sample Shirt,19.99,100,A comfortable cotton shirt
-Sample Shoes,49.99,50,Durable running shoes
+product_id,title,price,stock,url
+1,Sample Shirt,19.99,100,https://webscraper.io/test-sites/e-commerce/static/products/1
+2,Sample Shoes,49.99,50,https://webscraper.io/test-sites/e-commerce/static/products/2
 ```
-
----
-
-*If you see errors, ensure your API key is valid and the target site allows crawling.*
