@@ -431,7 +431,7 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
 def main() -> int:
     """Entry point for the Firecrawl E-commerce Scraper CLI."""
     parser = argparse.ArgumentParser(description="Firecrawl E-commerce Scraper")
-    parser.add_argument("--url", required=True, help="URL de la tienda")
+    parser.add_argument("--url", required=False, help="URL de la tienda")
     parser.add_argument("--key", default=None, help="Firecrawl API Key (defaults to FIRECRAWL_API_KEY env var)")
     parser.add_argument("--output", default="products_output.csv",
                         help="Nombre del archivo CSV de salida")
@@ -452,6 +452,10 @@ def main() -> int:
                         help="Run in demo mode with mock data (no API key required)")
 
     args = parser.parse_args()
+    if not args.demo and not args.url:
+        logger.error("URL is required unless running in demo mode.")
+        return 1
+
     if args.quiet:
         logger.setLevel(logging.WARNING)
     use_rich = not args.no_rich and not args.quiet
