@@ -11,7 +11,7 @@ A quick scraper for e-commerce sites using **Firecrawl**.
    Copy the example env file if you plan to use a real API key:
    ```bash
    cp .env.example .env
-   # Edit .env and replace \047your_api_key_here\047 with your actual key
+   # Edit .env and replace 'your_api_key_here' with your actual key
    ```
 
 3. **Install dependencies**
@@ -27,47 +27,21 @@ A quick scraper for e-commerce sites using **Firecrawl**.
 5. **Check the output**
    Open `sample_output.csv` to see the extracted product data. A sample output file is already included in the repo for reference.
 
-
-1. **Get a Firecrawl API key**  
-   Sign up at [https://firecrawl.dev](https://firecrawl.dev) for a free API key.
-
-2. **Set up environment**  
-   Copy the example env file and add your key:
-   ```bash
-   cp .env.example .env
-   # Edit .env and replace 'your_api_key_here' with your actual key
-   ```
-
-3. **Install dependencies**  
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Run the scraper on the sample e-commerce site (as defined in .env.example)**  
-   ```bash
-   python scraper.py --output sample_output.csv
-   ```
-   (This uses the TARGET_URL from .env.example: https://webscraper.io/test-sites/e-commerce/static)
-
-5. **Check the output**  
-   Open `sample_output.csv` to see the extracted product data. A sample output file is already included in the repo for reference.
-
-
 ## Demo mode
 
-Para probar el scraper sin necesidad de una clave API:
+To test the scraper without needing an API key:
    ```bash
    python3 -m scraper --demo --output demo_output.csv
    ```
 
 ## Output format
 
-El scraper genera un archivo CSV con las siguientes columnas:
-- `product_id` – Identificador del producto
-- `title` – Nombre del producto
-- `price` – Precio del producto
-- `stock` – Stock disponible
-- `url` – Enlace al producto
+The scraper generates a CSV file with the following columns:
+- `product_id` – Identifier of the product
+- `title` – Product name
+- `price` – Product price
+- `stock` – Available stock
+- `url` – Link to the product
 
 ## Sample output
 
