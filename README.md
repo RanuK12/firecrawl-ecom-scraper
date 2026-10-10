@@ -2,31 +2,32 @@
 
 A quick scraper for e-commerce sites using **Firecrawl**.
 
-## Quick start
+## Quick Start (2 minutes)
 
-1. Clona el repositorio:
-   ```bash
-   git clone https://github.com/RanuK12/firecrawl-ecom-scraper.git && cd firecrawl-ecom-scraper
-   ```
+1. **Get a Firecrawl API key**  
+   Sign up at [https://firecrawl.dev](https://firecrawl.dev) for a free API key.
 
-2. Configura tu clave API de Firecrawl:
+2. **Set up environment**  
+   Copy the example env file and add your key:
    ```bash
    cp .env.example .env
-   ```
-   
-   Edita `.env` y agrega tu clave API y la URL del sitio:
-   ```
-   FIRECRAWL_API_KEY=your_api_key_here
-   TARGET_URL=https://webscraper.io/test-sites/e-commerce/static
-   OUTPUT_CSV=output.csv
+   # Edit .env and replace 'your_api_key_here' with your actual key
    ```
 
-3. Ejecuta el ejemplo:
+3. **Install dependencies**  
    ```bash
-   python3 example_run.py
+   pip install -r requirements.txt
    ```
-   
-   El CSV de muestra se encontrará en `sample_output.csv`.
+
+4. **Run the scraper on the sample e-commerce site (as defined in .env.example)**  
+   ```bash
+   python scraper.py --output sample_output.csv
+   ```
+   (This uses the TARGET_URL from .env.example: https://webscraper.io/test-sites/e-commerce/static)
+
+5. **Check the output**  
+   Open `sample_output.csv` to see the extracted product data. A sample output file is already included in the repo for reference.
+
 
 ## Demo mode
 
