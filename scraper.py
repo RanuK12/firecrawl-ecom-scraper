@@ -6,7 +6,7 @@ import sys
 import re
 import os
 import requests
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from typing_extensions import TypedDict
 from firecrawl import FirecrawlApp
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type, retry_if_exception
@@ -354,7 +354,7 @@ def _find_products(data: Dict[str, Any]) -> List[Dict[str, Any]]:
 def _scrape_with_retry(app, url):
     return app.scrape_url(url)
 
-def _infer_format(output_file: str, explicit_fmt: str | None = None) -> str:
+def _infer_format(output_file: str, explicit_fmt: Optional[str] = None) -> str:
     """Infer output format from file extension. explicit_fmt (if not None) takes priority."""
     if explicit_fmt is not None and explicit_fmt in ("csv", "json"):
         return explicit_fmt
