@@ -12,9 +12,10 @@ cd firecrawl-ecom-scraper
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up your API key
+# Set up your API key (optional for demo mode!)
 cp .env.example .env
 # Edit .env and add: FIRECRAWL_API_KEY=your_actual_firecrawl_api_key_here
+# OR leave it empty and run in DEMO MODE!
 ```
 
 ### 💡 Optional: Install as CLI tool
@@ -27,6 +28,17 @@ firecrawl-scraper --url "https://example-store.com" --key "your_api_key"
 
 ## 🚀 Step 2: Run the Scraper
 
+### 🎯 MODO DEMO (¡Sin API Key!)
+```bash
+# Opción 1: Script de ejemplo (recomendado)
+python3 example_run.py
+
+# Opción 2: Directo con flag --demo
+python3 scraper.py --url https://demo.example.com --output demo_output.csv --demo
+```
+**¡Esto genera un CSV real en 2 minutos sin registrarte en Firecrawl!**
+
+### 🚀 Modo Producción (con API Key)
 ```bash
 # Run on an e-commerce site
 python3 scraper.py --url "https://example-ecommerce-store.com" --key "your_firecrawl_api_key"
@@ -35,18 +47,18 @@ python3 scraper.py --url "https://example-ecommerce-store.com" --key "your_firec
 ## 📁 Check the Results
 
 The scraper creates a CSV file with product data:
-- `name`: Product name
+- `product_id`: Unique product identifier
+- `title`: Product name
 - `price`: Price (cleaned of currency symbols)
 - `stock`: Stock information
-- `description`: Product description
+- `url`: Product URL
 
 ## 📋 Sample Output
 
 ```csv
-name,price,stock,description
-"Wireless Headphones","99.99","25","High-quality wireless headphones with noise cancellation"
-"Smartphone","599.99","15","Latest smartphone with advanced camera system"
-"Laptop","1299.99","8","Powerful laptop for professionals and gamers"
+product_id,title,price,stock,url
+1,Sample Shirt,19.99,100,https://webscraper.io/test-sites/e-commerce/static/products/1
+2,Sample Shoes,49.99,50,https://webscraper.io/test-sites/e-commerce/static/products/2
 ```
 
 ## 🎯 Next Steps

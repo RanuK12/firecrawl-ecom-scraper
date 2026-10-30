@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![Firecrawl](https://img.shields.io/badge/Firecrawl-v4.30.2%2B-green.svg)](https://firecrawl.dev)
+[![Demo Mode](https://img.shields.io/badge/Demo%20Mode-Ready-brightgreen.svg)](https://github.com/RanuK12/firecrawl-ecom-scraper#modo-demo-sin-api-key)
 
 Un scraper de e-commerce profesional que extrae catálogos de productos, precios e información de stock usando la API de Firecrawl. Ideal para análisis de mercado, comparación de precios y monitoreo de inventario.
 
@@ -62,6 +63,18 @@ Scrapea un sitio específico con salida personalizada:
 ```bash
 python scraper.py --url https://example.com/products --output custom_products.csv --no-rich
 ```
+
+### Modo Demo (¡Sin API Key!)
+
+**¡NUEVO!** Prueba el scraper completo en 2 minutos sin registrarte en Firecrawl:
+```bash
+python example_run.py
+```
+O directamente:
+```bash
+python scraper.py --url https://demo.example.com --output demo_output.csv --demo
+```
+El modo demo usa datos de muestra locales y genera el mismo CSV de salida que el modo real. Ideal para evaluar el producto antes de comprar.
 
 ### Ejemplo con Script de Demostración
 
