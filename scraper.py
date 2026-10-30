@@ -431,7 +431,7 @@ def scrape_ecommerce(url: str, api_key: str, output_file: str = "products_output
 def main() -> int:
     """Entry point for the Firecrawl E-commerce Scraper CLI."""
     parser = argparse.ArgumentParser(description="Firecrawl E-commerce Scraper")
-    parser.add_argument("--url", required=True, help="URL de la tienda")
+    parser.add_argument("--url", required=False, help="URL de la tienda (requerido salvo en --demo)")
     parser.add_argument("--key", default=None, help="Firecrawl API Key (defaults to FIRECRAWL_API_KEY env var)")
     parser.add_argument("--output", default="products_output.csv",
                         help="Nombre del archivo CSV de salida")
@@ -472,6 +472,10 @@ def main() -> int:
             return 1
     
     # Normal mode: require API key
+    if not args.demo and not args.url:
+        logger.error("URL is required for normal mode. Use --url or run with --demo for mock data.")
+        return 1
+    
     api_key = args.key or os.getenv('FIRECRAWL_API_KEY')
     if not api_key:
         logger.error("Firecrawl API key not provided. Use --key or set FIRECRAWL_API_KEY in .env.")
