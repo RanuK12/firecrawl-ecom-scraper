@@ -61,7 +61,7 @@ cp .env.example .env
 
 3. Edita el archivo `.env` con tus datos:
 ```env
-FIRECRAWL_API_KEY=your_api_key_here
+FIRECRAWL_API_KEY=sk-tu_clave_aqui
 TARGET_URL=https://webscraper.io/test-sites/e-commerce/static
 OUTPUT_CSV=output.csv
 ```
