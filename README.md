@@ -7,6 +7,24 @@
 
 Un scraper de e-commerce profesional que extrae catálogos de productos, precios e información de stock usando la API de Firecrawl. Ideal para análisis de mercado, comparación de precios y monitoreo de inventario.
 
+## Quick Start
+
+Prueba el scraper en 2 minutos sin instalar nada:
+
+1. Copia el archivo de entorno de ejemplo:
+```bash
+cp .env.example .env
+```
+
+2. Ejecuta el scraper:
+```bash
+python scraper.py
+```
+
+3. Verás `output.csv` generado en la carpeta del proyecto con los datos extraídos. Puedes ver el formato de salida en [`sample_output.csv`](sample_output.csv).
+
+---
+
 ## Características
 
 - 🚀 Extracción rápida de datos de productos mediante API Firecrawl
@@ -43,7 +61,7 @@ cp .env.example .env
 
 3. Edita el archivo `.env` con tus datos:
 ```env
-FIRECRAWL_API_KEY=your_api_key_here
+FIRECRAWL_API_KEY=sk-tu_clave_aqui
 TARGET_URL=https://webscraper.io/test-sites/e-commerce/static
 OUTPUT_CSV=output.csv
 ```
