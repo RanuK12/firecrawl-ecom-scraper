@@ -9,19 +9,19 @@ Un scraper de e-commerce profesional que extrae catálogos de productos, precios
 
 ## Quick Start
 
-Prueba el scraper en 2 minutos sin instalar nada:
+Prueba el scraper en 2 minutos sin registrarte en Firecrawl:
 
 1. Copia el archivo de entorno de ejemplo:
 ```bash
 cp .env.example .env
 ```
 
-2. Ejecuta el scraper:
+2. Ejecuta el scraper en modo demo (sin API key):
 ```bash
-python scraper.py
+python scraper.py --demo --output output.csv
 ```
 
-3. Verás `output.csv` generado en la carpeta del proyecto con los datos extraídos. Puedes ver el formato de salida en [`sample_output.csv`](sample_output.csv).
+3. Verás `output.csv` generado en la carpeta del proyecto con los datos de muestra. Puedes ver el formato esperado en [`sample_output.csv`](sample_output.csv).
 
 ---
 
