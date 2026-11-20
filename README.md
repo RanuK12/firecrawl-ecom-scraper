@@ -117,6 +117,16 @@ El scraper genera un archivo CSV con la siguiente estructura:
 - `stock`: Cantidad disponible en inventario
 - `url`: URL del producto
 
+## Validar el CSV de salida
+
+Antes de entregar o usar el CSV generado, valida que cumple el esquema esperado (name, price, stock, description) y que no tiene celdas vacías ni precios mal formateados:
+
+```bash
+python validate_output.py output.csv
+```
+
+Devuelve código de salida `0` si todo está bien, `1` si hay errores, imprimiendo un resumen de cada problema encontrado. Úsalo en tu pipeline de CI o antes de enviar el archivo a un cliente.
+
 ## Requisitos
 
 - Python 3.8+
