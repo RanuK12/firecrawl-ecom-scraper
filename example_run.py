@@ -1,23 +1,37 @@
-import os
-from scraper import scrape_ecommerce, main as scraper_main
+#!/usr/bin/env python3
+"""Ejemplo de uso del Firecrawl E-commerce Scraper en modo demo.
 
-# Cargar .env si existe (fallback a variables de entorno)
-from dotenv import load_dotenv
-load_dotenv('.env')
+Corre sin API key y genera un CSV de salida en ~2 minutos.
+Uso:
+    python example_run.py
+"""
 
-api_key = os.getenv('FIRECRAWL_API_KEY')
-url = os.getenv('TARGET_URL')
-output = os.getenv('OUTPUT_CSV', 'sample_output.csv')
+import subprocess
+import sys
+from pathlib import Path
 
-# MODO DEMO: si no hay API key o es 'demo', usa datos de muestra
-if not api_key or api_key == 'demo':
-    print('🎯 MODO DEMO: Generando CSV con datos de muestra (sin API key)...')
-    import sys
-    sys.argv = ['scraper', '--url', 'https://demo.example.com', '--output', output, '--demo']
-    scraper_main()
-    print(f'✅ CSV generado (demo): {output}')
-else:
-    # Modo normal con Firecrawl API
-    print(f'🚀 Modo producción: Scrapeando {url}...')
-    scrape_ecommerce(api_key, url, output)
-    print(f'✅ CSV generado: {output}')
+SCRAPER = Path(__file__).with_name("scraper.py")
+OUTPUT_CSV = Path(__file__).with_name("demo_output.csv")
+
+
+def main() -> int:
+    print("🚀 Ejecutando scraper en modo demo (sin API key)...")
+    cmd = [
+        sys.executable, str(SCRAPER),
+        "--demo",
+        "--output", str(OUTPUT_CSV),
+        "--no-rich",
+    ]
+    result = subprocess.run(cmd)
+    if result.returncode != 0:
+        print("❌ El scraper falló.")
+        return result.returncode
+
+    print(f"✅ Listo: {OUTPUT_CSV}")
+    print("\n📋 Primeras líneas del CSV:")
+    print(OUTPUT_CSV.read_text(encoding="utf-8")[:500])
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
