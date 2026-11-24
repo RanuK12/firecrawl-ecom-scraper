@@ -88,10 +88,6 @@ python scraper.py --url https://example.com/products --output custom_products.cs
 ```bash
 python example_run.py
 ```
-O directamente:
-```bash
-python scraper.py --url https://demo.example.com --output demo_output.csv --demo
-```
 El modo demo usa datos de muestra locales y genera el mismo CSV de salida que el modo real. Ideal para evaluar el producto antes de comprar.
 
 ### Ejemplo con Script de Demostración
@@ -105,17 +101,16 @@ python example_run.py
 
 El scraper genera un archivo CSV con la siguiente estructura:
 
-| product_id | title | price | stock | url |
-|------------|-------|-------|-------|-----|
-| 1 | Sample Shirt | 19.99 | 100 | https://webscraper.io/test-sites/e-commerce/static/products/1 |
-| 2 | Sample Shoes | 49.99 | 50 | https://webscraper.io/test-sites/e-commerce/static/products/2 |
+| name | price | stock | description |
+|------|-------|-------|-------------|
+| Sample Shirt | 19.99 | 100 | A comfortable cotton shirt |
+| Sample Shoes | 49.99 | 50 | Durable running shoes |
 
 **Columnas:**
-- `product_id`: Identificador único del producto
-- `title`: Nombre del producto
+- `name`: Nombre del producto
 - `price`: Precio formateado (sin símbolos de moneda)
 - `stock`: Cantidad disponible en inventario
-- `url`: URL del producto
+- `description`: Descripción corta del producto
 
 ## Validar el CSV de salida
 
