@@ -1,40 +1,71 @@
-#!/usr/bin/env python3
-"""Valida que un CSV de salida tenga las columnas esperadas del scraper.
+"""Validador de archivo CSV de salida del Firecrawl E-commerce Scraper.
+
+Comprueba que el CSV tenga exactamente las columnas esperadas
+(name, price, stock, description), sin columnas inexistentes (p. ej. product_id,
+title, url), sin celdas vacías y con price como número válido.
 
 Uso:
-    python validate_output.py [archivo.csv]
+    python3 validate_output.py <archivo.csv>
 """
-
 import csv
+import logging
+import re
 import sys
 from pathlib import Path
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
 EXPECTED_COLUMNS = ["name", "price", "stock", "description"]
+PRICE_RE = re.compile(r"^\d+(\.\d+)?$")
+
+
+def validate(csv_path: Path) -> bool:
+    if not csv_path.exists():
+        logger.error("El archivo no existe: %s", csv_path)
+        return False
+
+    errors = []
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        fieldnames = reader.fieldnames or []
+
+        # 1) Columnas esperadas y sin columnas de más / de menos
+        if set(fieldnames) != set(EXPECTED_COLUMNS):
+            extra = set(fieldnames) - set(EXPECTED_COLUMNS)
+            missing = set(EXPECTED_COLUMNS) - set(fieldnames)
+            if extra:
+                errors.append(f"Columnas inexistentes no esperadas: {sorted(extra)}")
+            if missing:
+                errors.append(f"Columnas faltantes: {sorted(missing)}")
+
+        # 2) Filas: sin celdas vacías y price válido
+        for i, row in enumerate(reader, start=2):
+            for col in EXPECTED_COLUMNS:
+                val = (row.get(col) or "").strip()
+                if val == "":
+                    errors.append(f"Fila {i}: celda vacía en '{col}'")
+            price = (row.get("price") or "").strip()
+            if price and not PRICE_RE.match(price):
+                errors.append(f"Fila {i}: price inválido '{price}' (esperado número decimal)")
+
+    if errors:
+        logger.error("❌ Validación falló (%d error(es)):", len(errors))
+        for err in errors:
+            logger.error("  - %s", err)
+        return False
+
+    logger.info("✅ CSV válido: %s", csv_path)
+    return True
 
 
 def main() -> int:
-    csv_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("demo_output.csv")
-    if not csv_path.exists():
-        print(f"❌ No se encontró el archivo: {csv_path}")
+    if len(sys.argv) != 2:
+        logger.error("Uso: python3 validate_output.py <archivo.csv>")
         return 1
-
-    with csv_path.open(newline="", encoding="utf-8") as f:
-        reader = csv.reader(f)
-        header = next(reader, None)
-
-    if header is None:
-        print("❌ El CSV está vacío.")
-        return 1
-
-    missing = [c for c in EXPECTED_COLUMNS if c not in header]
-    if missing:
-        print(f"❌ Columnas faltantes: {missing}")
-        print(f"   Columnas encontradas: {header}")
-        return 1
-
-    print(f"✅ {csv_path} es válido (columnas: {header})")
-    return 0
+    ok = validate(Path(sys.argv[1]))
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())
